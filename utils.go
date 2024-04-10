@@ -62,3 +62,18 @@ func GetTimestampNow() string {
 	timestamp := currTime.UnixNano() / int64(time.Millisecond)
 	return strconv.FormatInt(timestamp, 10)
 }
+
+func GetListingTier(listing Listing) string {
+	baseName := ExtractBaseItemName(listing.Name)
+	tiers, ok := GetRarePatterns()[baseName]
+	if !ok {
+		return ""
+	}
+
+	// find rarity definition
+	tier, ok := tiers[listing.PaintSeed]
+	if !ok {
+		return ""
+	}
+	return tier
+}

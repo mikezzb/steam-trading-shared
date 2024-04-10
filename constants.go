@@ -17,7 +17,8 @@ const (
 
 var WEAR_LEVELS = [5]string{"Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"}
 
-var BuffIds = map[string]int{}
+var buffIds = map[string]int{}
+var rarePatternMap = RarePatternMap{}
 var once sync.Once
 var sharedBasePath string
 
@@ -26,28 +27,49 @@ func init() {
 	sharedBasePath = filepath.Dir(filepath.Dir(filename))
 }
 
-func loadJSON(path string) {
+func loadJSON(path string, data interface{}) error {
 	// construct absolute file path
 	filePath := filepath.Join(sharedBasePath, path)
 
 	// load json file
 	jsonData, err := os.ReadFile(filePath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// unmarshal json
-	var data map[string]int
-	if err := json.Unmarshal(jsonData, &data); err != nil {
-		panic(err)
+	if err := json.Unmarshal(jsonData, data); err != nil {
+		return err
 	}
-	BuffIds = data
+	return nil
 }
 
 // GetBuffIds returns the map of item name to buff id
 func GetBuffIds() map[string]int {
 	once.Do(func() {
-		loadJSON(BUFF_IDS_PATH)
+		if err := loadJSON(BUFF_IDS_PATH, &buffIds); err != nil {
+			panic(err)
+		}
 	})
-	return BuffIds
+	return buffIds
+}
+
+func GetRarePatterns() RarePatternMap {
+	once.Do(func() {
+		rarePatternDb := RarePatternDB{}
+		if err := loadJSON(RARE_PATTERNS_PATH, &rarePatternDb); err != nil {
+			panic(err)
+		}
+		// format rarePatternDb to rarePatternMap
+		rarePatternMap = RarePatternMap{}
+		for itemName, tiers := range rarePatternDb {
+			rarePatternMap[itemName] = map[int]string{}
+			for tier, seeds := range tiers {
+				for _, seed := range seeds {
+					rarePatternMap[itemName][seed] = tier
+				}
+			}
+		}
+	})
+	return rarePatternMap
 }
