@@ -15,6 +15,12 @@ const (
 	RARE_PATTERNS_PATH = "shared/data/items/rare_patterns.json"
 )
 
+const (
+	MARKET_NAME_BUFF  = "buff"
+	MARKET_NAME_STEAM = "steam"
+	MARKET_NAME_UU    = "uu"
+)
+
 var WEAR_LEVELS = [5]string{"Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"}
 
 var buffIds = map[string]int{}
