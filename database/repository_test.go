@@ -1,10 +1,9 @@
 package database_test
 
 import (
+	"steam-trading/shared/database/model"
 	"testing"
 	"time"
-
-	"github.com/mikezzb/steam-trading-shared/database/model"
 
 	"github.com/mikezzb/steam-trading-shared/database"
 )

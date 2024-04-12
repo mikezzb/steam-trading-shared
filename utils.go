@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"steam-trading/shared/database/model"
 	"strconv"
 	"time"
-
-	"github.com/mikezzb/steam-trading-shared/database/model"
 )
 
 var STAT_TRAK_LABEL_LEN = len(STAT_TRAK_LABEL)

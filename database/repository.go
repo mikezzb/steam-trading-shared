@@ -1,6 +1,6 @@
 package database
 
-import "github.com/mikezzb/steam-trading-shared/database/repository"
+import "steam-trading/shared/database/repository"
 
 type Repositories struct {
 	dbClient        *DBClient
