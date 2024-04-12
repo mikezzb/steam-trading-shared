@@ -1,12 +1,12 @@
-package repository_test
+package database_test
 
 import (
-	"steam-trading/shared/database/model"
 	"testing"
 	"time"
 
+	"github.com/mikezzb/steam-trading-shared/database/model"
+
 	"github.com/mikezzb/steam-trading-shared/database"
-	"github.com/mikezzb/steam-trading-shared/database/repository"
 )
 
 func TestItemRepository_UpdateItem(t *testing.T) {
@@ -17,8 +17,9 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 		}
 		db.Ping()
 		// defer db.Disconnect()
+		repos := database.NewRepositories(db)
 
-		repo := repository.NewItemRepository(db)
+		repo := repos.GetItemRepository()
 		item := model.Item{
 			Name: "★ Bayonet | Doppler (Factory New)",
 		}
@@ -37,6 +38,19 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 
 		if updatedItem == nil {
 			t.Errorf("Item not found: %v", item.Name)
+			return
+		}
+
+		// delete
+		err = repo.DeleteItemByName(*updatedItem)
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		_, err = repo.FindItemByName(item.Name)
+		if err == nil {
+			t.Errorf("Item not deleted: %v", item.Name)
 		}
 
 	})

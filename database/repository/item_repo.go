@@ -3,33 +3,26 @@ package repository
 import (
 	"context"
 	"fmt"
-	"steam-trading/shared/database/model"
 	"time"
 
-	"github.com/mikezzb/steam-trading-shared/database"
+	"github.com/mikezzb/steam-trading-shared/database/model"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ItemRepository struct {
-	dbClient *database.DBClient
-	itemCol  *mongo.Collection
-}
-
-func NewItemRepository(dbClient *database.DBClient) *ItemRepository {
-	return &ItemRepository{
-		dbClient: dbClient,
-		itemCol:  dbClient.DB.Collection("items"),
-	}
+	ItemCol *mongo.Collection
 }
 
 func (r *ItemRepository) FindItemByName(name string) (*model.Item, error) {
+	primitive.NewObjectID()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var item model.Item
-	err := r.itemCol.FindOne(ctx, bson.M{"name": name}).Decode(&item)
+	err := r.ItemCol.FindOne(ctx, bson.M{"name": name}).Decode(&item)
 	return &item, err
 }
 
@@ -42,6 +35,16 @@ func sameItem(item1, item2 *model.Item) bool {
 		item1.LowestMarketPrice == item2.LowestMarketPrice &&
 		item1.LowestMarketName == item2.LowestMarketName &&
 		item1.SteamPrice == item2.SteamPrice
+}
+
+func (r *ItemRepository) DeleteItemByName(item model.Item) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := r.ItemCol.DeleteOne(ctx,
+		bson.M{"name": item.Name},
+	)
+	return err
 }
 
 func GetItemUpdateBson(oldItem, newItem *model.Item) interface{} {
@@ -77,9 +80,9 @@ func (r *ItemRepository) UpdateItem(item model.Item) error {
 	defer cancel()
 
 	// find existing item by name
-	oldItem, _ := r.FindItemByName(item.Name)
-	// sync price
-	if oldItem != nil {
+	oldItem, err := r.FindItemByName(item.Name)
+	// sync price if oldItem exists
+	if err == nil {
 		// if item is NOT better than oldItem, keep oldItem's price
 		if item.Name != oldItem.Name && item.LowestMarketPrice > oldItem.LowestMarketPrice {
 			item.LowestMarketPrice = oldItem.LowestMarketPrice
@@ -92,7 +95,7 @@ func (r *ItemRepository) UpdateItem(item model.Item) error {
 		update := GetItemUpdateBson(oldItem, &item)
 		fmt.Printf("bson: %v\n", GetItemUpdateBson(oldItem, &item))
 
-		_, err := r.itemCol.UpdateOne(ctx, bson.M{"name": item.Name}, update, opt)
+		_, err := r.ItemCol.UpdateOne(ctx, bson.M{"name": item.Name}, update, opt)
 		return err
 	}
 	return nil

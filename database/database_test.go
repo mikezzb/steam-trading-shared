@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/mikezzb/steam-trading-shared/database"
-	"github.com/mikezzb/steam-trading-shared/database/repository"
 )
 
 func TestDBClient(t *testing.T) {
@@ -30,7 +29,7 @@ func TestDBRepositories(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to connect to db: %v", err)
 		}
-		repos := repository.NewRepositories(dbClient)
+		repos := database.NewRepositories(dbClient)
 		fmt.Printf("Repositories: %v\n", repos)
 		defer dbClient.Disconnect()
 	})
