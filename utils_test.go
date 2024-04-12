@@ -46,3 +46,15 @@ func TestUtils_Tier(t *testing.T) {
 		}
 	})
 }
+
+func TestOthers(t *testing.T) {
+	t.Run("GetTimestampNow", func(t *testing.T) {
+		t.Log(GetTimestampNow())
+	})
+}
+
+func TestRandSleep(t *testing.T) {
+	t.Run("RandSleep", func(t *testing.T) {
+		RandomSleep(5, 9)
+	})
+}

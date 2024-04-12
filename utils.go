@@ -1,6 +1,10 @@
 package shared
 
 import (
+	"fmt"
+	"math/rand"
+	"net/http"
+	"steam-trading/shared/database/model"
 	"strconv"
 	"time"
 )
@@ -63,7 +67,7 @@ func GetTimestampNow() string {
 	return strconv.FormatInt(timestamp, 10)
 }
 
-func GetListingTier(listing Listing) string {
+func GetListingTier(listing model.Listing) string {
 	baseName := ExtractBaseItemName(listing.Name)
 	tiers, ok := GetRarePatterns()[baseName]
 	if !ok {
@@ -76,4 +80,20 @@ func GetListingTier(listing Listing) string {
 		return ""
 	}
 	return tier
+}
+
+func PrintCookies(cookies []*http.Cookie, label string) {
+	for _, cookie := range cookies {
+		fmt.Printf("[%s] Cookie: %v\n", label, cookie)
+	}
+}
+
+func RandomFloat(min, max int) float32 {
+	return float32(min) + rand.Float32()*(float32(max)-float32(min))
+}
+
+func RandomSleep(min, max int) {
+	randVal := RandomFloat(min, max)
+	fmt.Printf("Sleeping for %f ms\n", randVal)
+	time.Sleep(time.Duration(randVal) * time.Second)
 }
