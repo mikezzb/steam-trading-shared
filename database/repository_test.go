@@ -1,10 +1,13 @@
 package database_test
 
 import (
+	"fmt"
+	"log"
 	"testing"
 	"time"
 
 	"github.com/mikezzb/steam-trading-shared/database/model"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/mikezzb/steam-trading-shared/database"
 )
@@ -15,8 +18,7 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		db.Ping()
-		// defer db.Disconnect()
+		defer db.Disconnect()
 		repos := database.NewRepositories(db)
 
 		repo := repos.GetItemRepository()
@@ -52,6 +54,76 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 		if err == nil {
 			t.Errorf("Item not deleted: %v", item.Name)
 		}
+
+	})
+}
+
+func TestListingRepo_Insert(t *testing.T) {
+	t.Run("Insert", func(t *testing.T) {
+		db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+		if err != nil {
+			t.Error(err)
+		}
+		defer db.Disconnect()
+		repos := database.NewRepositories(db)
+
+		repo := repos.GetListingRepository()
+		// listingFile := "mocks/listings.json"
+		// b, err := os.ReadFile(listingFile)
+		if err != nil {
+			t.Error(err)
+		}
+
+		listings := []model.Listing{
+			{
+				Name: "★ Bayonet | Doppler (Factory New)",
+			},
+			{
+				Name: "★ Bayonet | Doppler (Minimal Wear)",
+			},
+		}
+		// json.Unmarshal(b, &listings)
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = repo.InsertListings(listings)
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		// Get the item back
+		updatedListing, err := repo.FindListingByItemName(listings[0].Name)
+		if err != nil {
+			t.Error(err)
+		}
+		log.Printf("Updated listing: %v", updatedListing)
+
+		if updatedListing == nil {
+			t.Errorf("Listing not found: %v", listings[0].Name)
+			return
+		}
+
+		// delete
+		err = repo.DeleteListingByItemName(updatedListing.Name)
+		if err != nil {
+			t.Error(err)
+		}
+	})
+
+}
+
+func TestMongoID(t *testing.T) {
+	t.Run("MongoID", func(t *testing.T) {
+
+		// Generate a new ObjectID
+		objectID := primitive.NewObjectID()
+
+		// Extract timestamp information from the ObjectID
+		timestamp := objectID.Timestamp()
+		fmt.Printf("Timestamp: %v\n", timestamp)
 
 	})
 }

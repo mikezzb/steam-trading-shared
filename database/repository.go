@@ -27,7 +27,9 @@ func (r *Repositories) GetItemRepository() *repository.ItemRepository {
 
 func (r *Repositories) GetListingRepository() *repository.ListingRepository {
 	if r.listingRepo == nil {
-		r.listingRepo = &repository.ListingRepository{}
+		r.listingRepo = &repository.ListingRepository{
+			ListingCol: r.dbClient.DB.Collection("listings"),
+		}
 	}
 	return r.listingRepo
 }
