@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/mikezzb/steam-trading-shared/database/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -32,7 +31,6 @@ func (r *ListingRepository) InsertListings(listings []model.Listing) error {
 		listing.ID = primitive.NewObjectID()
 		documents = append(documents, listing)
 	}
-	fmt.Printf("Inserting %v documents\n", documents)
 	_, err := r.ListingCol.InsertMany(ctx, documents, options.InsertMany())
 	return err
 }

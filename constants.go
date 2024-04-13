@@ -25,7 +25,8 @@ var WEAR_LEVELS = [5]string{"Factory New", "Minimal Wear", "Field-Tested", "Well
 
 var buffIds = map[string]int{}
 var rarePatternMap = RarePatternMap{}
-var once sync.Once
+var buffIdOnce sync.Once
+var rarePatternOnce sync.Once
 var sharedBasePath string
 
 func init() {
@@ -52,7 +53,7 @@ func loadJSON(path string, data interface{}) error {
 
 // GetBuffIds returns the map of item name to buff id
 func GetBuffIds() map[string]int {
-	once.Do(func() {
+	buffIdOnce.Do(func() {
 		if err := loadJSON(BUFF_IDS_PATH, &buffIds); err != nil {
 			panic(err)
 		}
@@ -61,7 +62,7 @@ func GetBuffIds() map[string]int {
 }
 
 func GetRarePatterns() RarePatternMap {
-	once.Do(func() {
+	rarePatternOnce.Do(func() {
 		rarePatternDb := RarePatternDB{}
 		if err := loadJSON(RARE_PATTERNS_PATH, &rarePatternDb); err != nil {
 			panic(err)

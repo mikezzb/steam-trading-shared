@@ -1,8 +1,9 @@
 package shared
 
 import (
-	"github.com/mikezzb/steam-trading-shared/database/model"
 	"testing"
+
+	"github.com/mikezzb/steam-trading-shared/database/model"
 )
 
 func TestUtils_Naming(t *testing.T) {
@@ -39,10 +40,15 @@ func TestUtils_Tier(t *testing.T) {
 				model.Listing{Name: "★ Karambit | Doppler (Factory New)", PaintSeed: 741},
 				"Good Phase 2",
 			},
+			{
+				model.Listing{Name: "★ Bayonet | Marble Fade (Factory New)", PaintSeed: 727},
+				"FFI",
+			},
 		}
 
 		for _, pair := range testPairs {
-			actual := GetListingTier(pair.listing)
+			listing := pair.listing
+			actual := GetTier(listing.Name, listing.PaintSeed)
 			if actual != pair.expected {
 				t.Errorf("Expected %s, got %s", pair.expected, actual)
 			}

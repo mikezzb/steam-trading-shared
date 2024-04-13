@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/mikezzb/steam-trading-shared/database/model"
 )
 
 var STAT_TRAK_LABEL_LEN = len(STAT_TRAK_LABEL)
@@ -68,15 +66,17 @@ func GetTimestampNow() string {
 	return strconv.FormatInt(timestamp, 10)
 }
 
-func GetListingTier(listing model.Listing) string {
-	baseName := ExtractBaseItemName(listing.Name)
+func GetTier(name string, paintSeed int) string {
+	baseName := ExtractBaseItemName(name)
+	// fmt.Printf("BaseName: %s\n", baseName)
 	tiers, ok := GetRarePatterns()[baseName]
+	// fmt.Printf("Tiers: %v\n", tiers)
 	if !ok {
 		return ""
 	}
 
 	// find rarity definition
-	tier, ok := tiers[listing.PaintSeed]
+	tier, ok := tiers[paintSeed]
 	if !ok {
 		return ""
 	}

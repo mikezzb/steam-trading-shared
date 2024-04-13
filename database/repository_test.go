@@ -115,6 +115,50 @@ func TestListingRepo_Insert(t *testing.T) {
 
 }
 
+func TestTransactionRepo_Insert(t *testing.T) {
+	t.Run("Insert", func(t *testing.T) {
+		db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+		if err != nil {
+			t.Error(err)
+		}
+		defer db.Disconnect()
+		repos := database.NewRepositories(db)
+
+		repo := repos.GetTransactionRepository()
+		transactions := []model.Transaction{
+			{
+				Name: "★ Bayonet | Doppler (Factory New)",
+			},
+			{
+				Name: "★ Bayonet | Doppler (Minimal Wear)",
+			},
+		}
+
+		err = repo.InsertTransactions(transactions)
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		// Get the item back
+		updatedTransaction, err := repo.FindTransactionByItemName(transactions[0].Name)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if updatedTransaction == nil {
+			t.Errorf("Transaction not found: %v", transactions[0].Name)
+			return
+		}
+
+		// delete
+		err = repo.DeleteTransactionByItemName(updatedTransaction.Name)
+		if err != nil {
+			t.Error(err)
+		}
+	})
+}
+
 func TestMongoID(t *testing.T) {
 	t.Run("MongoID", func(t *testing.T) {
 

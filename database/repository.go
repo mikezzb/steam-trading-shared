@@ -36,7 +36,9 @@ func (r *Repositories) GetListingRepository() *repository.ListingRepository {
 
 func (r *Repositories) GetTransactionRepository() *repository.TransactionRepository {
 	if r.transactionRepo == nil {
-		r.transactionRepo = &repository.TransactionRepository{}
+		r.transactionRepo = &repository.TransactionRepository{
+			TransactionCol: r.dbClient.DB.Collection("transactions"),
+		}
 	}
 	return r.transactionRepo
 }
