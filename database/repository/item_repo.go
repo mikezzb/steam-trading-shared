@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
-	"steam-trading/shared/database/model"
+	"github.com/mikezzb/steam-trading-shared/database/model"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"

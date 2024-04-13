@@ -1,6 +1,9 @@
 package shared
 
-import "testing"
+import (
+	"github.com/mikezzb/steam-trading-shared/database/model"
+	"testing"
+)
 
 func TestUtils_Naming(t *testing.T) {
 	t.Run("ExtractBaseItemName", func(t *testing.T) {
@@ -25,15 +28,15 @@ func TestUtils_Naming(t *testing.T) {
 func TestUtils_Tier(t *testing.T) {
 	t.Run("GetListingTier", func(t *testing.T) {
 		testPairs := []struct {
-			listing  Listing
+			listing  model.Listing
 			expected string
 		}{
 			{
-				Listing{Name: "★ Flip Knife | Marble Fade (Factory New)", PaintSeed: 872},
+				model.Listing{Name: "★ Flip Knife | Marble Fade (Factory New)", PaintSeed: 872},
 				"Tricolor",
 			},
 			{
-				Listing{Name: "★ Karambit | Doppler (Factory New)", PaintSeed: 741},
+				model.Listing{Name: "★ Karambit | Doppler (Factory New)", PaintSeed: 741},
 				"Good Phase 2",
 			},
 		}
