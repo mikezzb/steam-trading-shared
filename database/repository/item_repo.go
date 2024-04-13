@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 	"fmt"
+
 	"github.com/mikezzb/steam-trading-shared/database/model"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,7 +16,7 @@ type ItemRepository struct {
 }
 
 func (r *ItemRepository) FindItemByName(name string) (*model.Item, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
 
 	var item model.Item
@@ -35,8 +35,8 @@ func sameItem(item1, item2 *model.Item) bool {
 		item1.SteamPrice == item2.SteamPrice
 }
 
-func (r *ItemRepository) DeleteItemByName(item model.Item) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func (r *ItemRepository) DeleteItemByName(item *model.Item) error {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
 
 	_, err := r.ItemCol.DeleteOne(ctx,
@@ -52,29 +52,37 @@ func GetItemUpdateBson(oldItem, newItem *model.Item) interface{} {
 		}
 	}
 	// find dirty fields
-	item := bson.M{}
+	item := GetBsonWithUpdatedAt()
 	if oldItem.Name != newItem.Name {
 		item["name"] = newItem.Name
 	}
 	if oldItem.IconUrl != newItem.IconUrl {
-		item["icon_url"] = newItem.IconUrl
+		item["iconUrl"] = newItem.IconUrl
 	}
 	if oldItem.LowestMarketPrice != newItem.LowestMarketPrice {
-		item["lowest_market_price"] = newItem.LowestMarketPrice
+		item["lowestMarketPrice"] = newItem.LowestMarketPrice
 	}
 	if oldItem.LowestMarketName != newItem.LowestMarketName {
-		item["lowest_market_name"] = newItem.LowestMarketName
+		item["lowestMarketName"] = newItem.LowestMarketName
 	}
 	if oldItem.SteamPrice != newItem.SteamPrice {
-		item["steam_price"] = newItem.SteamPrice
+		item["steamPrice"] = newItem.SteamPrice
 	}
 	return bson.M{
 		"$set": item,
 	}
 }
 
-func (r *ItemRepository) UpdateItem(item model.Item) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func (r *ItemRepository) UpdateItem(item *model.Item) error {
+	// clone item for modification
+	item = &model.Item{
+		Name:              item.Name,
+		IconUrl:           item.IconUrl,
+		LowestMarketPrice: item.LowestMarketPrice,
+		LowestMarketName:  item.LowestMarketName,
+		SteamPrice:        item.SteamPrice,
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
 
 	// find existing item by name
@@ -88,10 +96,10 @@ func (r *ItemRepository) UpdateItem(item model.Item) error {
 		}
 	}
 	// upsert if has delta
-	if !sameItem(oldItem, &item) {
+	if !sameItem(oldItem, item) {
 		opt := options.Update().SetUpsert(true)
-		update := GetItemUpdateBson(oldItem, &item)
-		fmt.Printf("bson: %v\n", GetItemUpdateBson(oldItem, &item))
+		update := GetItemUpdateBson(oldItem, item)
+		fmt.Printf("bson: %v\n", GetItemUpdateBson(oldItem, item))
 
 		_, err := r.ItemCol.UpdateOne(ctx, bson.M{"name": item.Name}, update, opt)
 		return err

@@ -1,7 +1,9 @@
-package database
+package repository
 
 import (
 	"reflect"
+	"strconv"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -23,4 +25,21 @@ func GenerateUpdateBson(oldValue, newValue interface{}) bson.M {
 	}
 
 	return updateDoc
+}
+
+// func SetUpdatedAtBson(m bson.M) bson.M {
+// 	timestamp := GetTimestampNow()
+// 	m["updatedAt"] = timestamp
+// 	return m
+// }
+
+func GetBsonWithUpdatedAt() bson.M {
+	timestamp := GetTimestampNow()
+	return bson.M{"updatedAt": timestamp}
+}
+
+func GetTimestampNow() string {
+	currTime := time.Now()
+	timestamp := currTime.UnixNano() / int64(time.Millisecond)
+	return strconv.FormatInt(timestamp, 10)
 }

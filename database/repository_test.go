@@ -1,9 +1,10 @@
 package database_test
 
 import (
-	"github.com/mikezzb/steam-trading-shared/database/model"
 	"testing"
 	"time"
+
+	"github.com/mikezzb/steam-trading-shared/database/model"
 
 	"github.com/mikezzb/steam-trading-shared/database"
 )
@@ -19,7 +20,7 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 		repos := database.NewRepositories(db)
 
 		repo := repos.GetItemRepository()
-		item := model.Item{
+		item := &model.Item{
 			Name: "★ Bayonet | Doppler (Factory New)",
 		}
 
@@ -41,7 +42,7 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 		}
 
 		// delete
-		err = repo.DeleteItemByName(*updatedItem)
+		err = repo.DeleteItemByName(updatedItem)
 
 		if err != nil {
 			t.Error(err)
