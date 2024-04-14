@@ -1,7 +1,7 @@
 package database_test
 
 import (
-	"fmt"
+	"log"
 	"testing"
 	"time"
 
@@ -16,7 +16,7 @@ func TestDBClient(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to connect to db: %v", err)
 		}
-		fmt.Printf("Connected to db: %v\n", dbClient)
+		log.Printf("Connected to db at %s\n", localMongoURL)
 		defer dbClient.Disconnect()
 	})
 }
@@ -30,7 +30,7 @@ func TestDBRepositories(t *testing.T) {
 			t.Fatalf("Failed to connect to db: %v", err)
 		}
 		repos := database.NewRepositories(dbClient)
-		fmt.Printf("Repositories: %v\n", repos)
+		log.Printf("Repositories: %v\n", repos)
 		defer dbClient.Disconnect()
 	})
 }

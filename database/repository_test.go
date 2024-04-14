@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"fmt"
 	"log"
 	"testing"
 	"time"
@@ -167,7 +166,7 @@ func TestMongoID(t *testing.T) {
 
 		// Extract timestamp information from the ObjectID
 		timestamp := objectID.Timestamp()
-		fmt.Printf("Timestamp: %v\n", timestamp)
+		log.Printf("Timestamp: %v\n", timestamp)
 
 	})
 }

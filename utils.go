@@ -1,7 +1,7 @@
 package shared
 
 import (
-	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -68,9 +68,7 @@ func GetTimestampNow() string {
 
 func GetTier(name string, paintSeed int) string {
 	baseName := ExtractBaseItemName(name)
-	// fmt.Printf("BaseName: %s\n", baseName)
 	tiers, ok := GetRarePatterns()[baseName]
-	// fmt.Printf("Tiers: %v\n", tiers)
 	if !ok {
 		return ""
 	}
@@ -85,7 +83,7 @@ func GetTier(name string, paintSeed int) string {
 
 func PrintCookies(cookies []*http.Cookie, label string) {
 	for _, cookie := range cookies {
-		fmt.Printf("[%s] Cookie: %v\n", label, cookie)
+		log.Printf("[%s] Cookie: %v\n", label, cookie)
 	}
 }
 
@@ -93,8 +91,13 @@ func RandomFloat(min, max int) float32 {
 	return float32(min) + rand.Float32()*(float32(max)-float32(min))
 }
 
-func RandomSleep(min, max int) {
+func GetRandomSleepDuration(min, max int) time.Duration {
 	randVal := RandomFloat(min, max)
-	fmt.Printf("Sleeping for %f ms\n", randVal)
-	time.Sleep(time.Duration(randVal) * time.Second)
+	return time.Duration(randVal) * time.Second
+}
+
+func RandomSleep(min, max int) {
+	randVal := GetRandomSleepDuration(min, max)
+	log.Printf("Sleeping for %v\n", randVal)
+	time.Sleep(randVal)
 }

@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/mikezzb/steam-trading-shared/database/model"
 
@@ -99,7 +98,6 @@ func (r *ItemRepository) UpdateItem(item *model.Item) error {
 	if !sameItem(oldItem, item) {
 		opt := options.Update().SetUpsert(true)
 		update := GetItemUpdateBson(oldItem, item)
-		fmt.Printf("bson: %v\n", GetItemUpdateBson(oldItem, item))
 
 		_, err := r.ItemCol.UpdateOne(ctx, bson.M{"name": item.Name}, update, opt)
 		return err
