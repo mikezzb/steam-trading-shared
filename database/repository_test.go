@@ -115,15 +115,16 @@ func TestListingRepo_Insert(t *testing.T) {
 }
 
 func TestTransactionRepo_Insert(t *testing.T) {
-	t.Run("Insert", func(t *testing.T) {
-		db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
-		if err != nil {
-			t.Error(err)
-		}
-		defer db.Disconnect()
-		repos := database.NewRepositories(db)
+	db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+	if err != nil {
+		t.Error(err)
+	}
+	defer db.Disconnect()
+	repos := database.NewRepositories(db)
 
-		repo := repos.GetTransactionRepository()
+	repo := repos.GetTransactionRepository()
+
+	t.Run("Insert", func(t *testing.T) {
 		transactions := []model.Transaction{
 			{
 				Name: "★ Bayonet | Doppler (Factory New)",
@@ -152,6 +153,70 @@ func TestTransactionRepo_Insert(t *testing.T) {
 
 		// delete
 		err = repo.DeleteTransactionByItemName(updatedTransaction.Name)
+		if err != nil {
+			t.Error(err)
+		}
+	})
+
+	t.Run("Upsert", func(t *testing.T) {
+		transactions := []model.Transaction{
+			{
+				Name:       "★ Bayonet | Doppler (Factory New)",
+				AssetId:    "123",
+				PreviewUrl: "Old Preview URL",
+			},
+			{
+				Name:    "★ Bayonet | Doppler (Minimal Wear)",
+				AssetId: "456",
+			},
+		}
+
+		err = repo.InsertTransactions(transactions)
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		// Upsert the transaction
+		newTransactions := []model.Transaction{
+			{
+				Name:       "★ Bayonet | Doppler (Factory New)",
+				AssetId:    "123",
+				PreviewUrl: "New Preview URL",
+			},
+			{
+				Name:    "★ Bayonet | Doppler (Minimal Wear)",
+				AssetId: "101112",
+			},
+		}
+
+		err = repo.UpsertTransactionsByAssetID(newTransactions)
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		// Get the item back
+		updatedTransaction, err := repo.FindTransactionByAssetId(transactions[0].AssetId)
+		if err != nil {
+			t.Error(err)
+		}
+
+		// expect the preview url to be updated
+		if updatedTransaction.PreviewUrl != newTransactions[0].PreviewUrl {
+			t.Errorf("Preview URL not updated: %v", updatedTransaction.PreviewUrl)
+		}
+
+		// get ALL transactions
+		allTransactions, err := repo.FindAllTransactions()
+		if err != nil {
+			t.Error(err)
+		}
+
+		log.Printf("%v transactions: %v", len(allTransactions), allTransactions)
+
+		// delete all transactions
+		err = repo.DeleteAll()
 		if err != nil {
 			t.Error(err)
 		}

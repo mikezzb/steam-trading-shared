@@ -3,7 +3,7 @@ package model
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type Item struct {
-	ID primitive.ObjectID `bson:"_id" json:"id"`
+	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
 	Name              string `bson:"name" json:"name"`
 	IconUrl           string `bson:"iconUrl" json:"iconUrl"`
@@ -14,7 +14,7 @@ type Item struct {
 }
 
 type Listing struct {
-	ID primitive.ObjectID `bson:"_id"`
+	ID primitive.ObjectID `bson:"_id,omitempty"`
 
 	Name             string `bson:"name"`
 	Price            string `bson:"price"`
@@ -33,7 +33,7 @@ type Listing struct {
 }
 
 type Transaction struct {
-	ID primitive.ObjectID `bson:"_id"`
+	ID primitive.ObjectID `bson:"_id,omitempty"`
 
 	Name             string `bson:"name"`
 	Price            string `bson:"price"`
@@ -53,7 +53,7 @@ type Transaction struct {
 
 // Subscription on the rare patterns of an item
 type Subscription struct {
-	ID primitive.ObjectID `bson:"_id"`
+	ID primitive.ObjectID `bson:"_id,omitempty"`
 
 	Name string `bson:"name"`
 
