@@ -235,3 +235,87 @@ func TestMongoID(t *testing.T) {
 
 	})
 }
+
+func TestDeleteOldListing(t *testing.T) {
+	db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+	if err != nil {
+		t.Error(err)
+	}
+	defer db.Disconnect()
+	repos := database.NewRepositories(db)
+
+	repo := repos.GetListingRepository()
+
+	t.Run("DeleteOldListing", func(t *testing.T) {
+		listings := []model.Listing{
+			{
+				Name:    "★ Bayonet | Doppler (Factory New)",
+				AssetId: "123",
+				Price:   "100",
+			},
+			{
+				Name:    "★ Bayonet | Doppler (Factory New)",
+				AssetId: "123",
+				Price:   "105", // UPDATED
+			},
+		}
+
+		err = repo.InsertListings(listings)
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = repo.DeleteOldListingsByAssetID(listings[0].AssetId)
+		if err != nil {
+			t.Error(err)
+		}
+
+		// Get the item back
+		updatedListing, err := repo.FindItemByAssetId(listings[0].AssetId)
+		if err != nil {
+			t.Error(err)
+		}
+
+		// ensure the list have updated price
+		if updatedListing.Price != listings[1].Price {
+			t.Errorf("Price not updated: %v", updatedListing.Price)
+		}
+	})
+}
+
+func TestMergeByAssetIds(t *testing.T) {
+	db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+	if err != nil {
+		t.Error(err)
+	}
+	defer db.Disconnect()
+	repos := database.NewRepositories(db)
+
+	listingRepo := repos.GetListingRepository()
+	transactionRepo := repos.GetTransactionRepository()
+
+	t.Run("Merge Listings", func(t *testing.T) {
+		assetIds, err := listingRepo.GetAllUniqueAssetIDs()
+		if err != nil {
+			t.Error(err)
+		}
+
+		for _, assetId := range assetIds {
+			log.Printf("Merging assetId: %v\n", assetId)
+			listingRepo.DeleteOldListingsByAssetID(assetId)
+		}
+	})
+
+	t.Run("Merge Transactions", func(t *testing.T) {
+		assetIds, err := transactionRepo.GetAllUniqueAssetIDs()
+		if err != nil {
+			t.Error(err)
+		}
+
+		for _, assetId := range assetIds {
+			log.Printf("Merging assetId: %v\n", assetId)
+			transactionRepo.DeleteOldTransactionsByAssetID(assetId)
+		}
+	})
+}
