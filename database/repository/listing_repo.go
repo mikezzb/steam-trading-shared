@@ -24,6 +24,15 @@ func (r *ListingRepository) FindListingByItemName(name string) (*model.Listing, 
 	return &listing, err
 }
 
+func (r *ListingRepository) FindOneListing(filter bson.M) (*model.Listing, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	var listing model.Listing
+	err := r.ListingCol.FindOne(ctx, filter).Decode(&listing)
+	return &listing, err
+}
+
 func (r *ListingRepository) InsertListings(listings []model.Listing) error {
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
@@ -35,7 +44,34 @@ func (r *ListingRepository) InsertListings(listings []model.Listing) error {
 	return err
 }
 
-func (r *ListingRepository) UpsertListingsByAssetID(listings []model.Listing) error {
+// Returns the listings that were really updated / created
+func (r *ListingRepository) UpsertListingsByAssetID(listings []model.Listing) ([]model.Listing, error) {
+	updatedListings := make([]model.Listing, 0)
+
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	// upsert each listing to know which one was really updated / created
+	for _, listing := range listings {
+		filter := bson.M{"assetId": listing.AssetId}
+		update := bson.M{"$set": listing}
+		opts := options.Update().SetUpsert(true)
+
+		result, err := r.ListingCol.UpdateOne(ctx, filter, update, opts)
+		if err != nil {
+			return nil, err
+		}
+
+		// if created or updated
+		if result.UpsertedID != nil || result.ModifiedCount > 0 {
+			updatedListings = append(updatedListings, listing)
+		}
+	}
+
+	return updatedListings, nil
+}
+
+func (r *ListingRepository) BulkUpsertListingsByAssetID(listings []model.Listing) error {
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
 
@@ -141,4 +177,12 @@ func (r *ListingRepository) GetAllUniqueAssetIDs() ([]string, error) {
 	}
 
 	return assetIDs, nil
+}
+
+func (r *ListingRepository) DeleteAll() error {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	_, err := r.ListingCol.DeleteMany(ctx, bson.M{})
+	return err
 }

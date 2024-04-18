@@ -32,6 +32,24 @@ type Listing struct {
 	Rarity     string `bson:"rarity"`
 }
 
+// Subscription on the rare patterns of an item
+type Subscription struct {
+	ID primitive.ObjectID `bson:"_id,omitempty"`
+
+	Name string `bson:"name"`
+
+	// Optional, if not provided, it means subscribe to all rarity
+	Rarity string `bson:"rarity"`
+	// Optional, can be percentage or absolute value
+	MaxPremium string `bson:"maxPremium"`
+
+	// Alarm settings. Example: Telegram, Email
+	NotiType string `bson:"notiType"`
+	// Example: Telegram chat id, or email address
+	NotiId string `bson:"notiId"`
+}
+
+// Currently same as Listing
 type Transaction struct {
 	ID primitive.ObjectID `bson:"_id,omitempty"`
 
@@ -49,21 +67,4 @@ type Transaction struct {
 	PaintIndex int    `bson:"paintIndex"`
 	PaintSeed  int    `bson:"paintSeed"`
 	Rarity     string `bson:"rarity"`
-}
-
-// Subscription on the rare patterns of an item
-type Subscription struct {
-	ID primitive.ObjectID `bson:"_id,omitempty"`
-
-	Name string `bson:"name"`
-
-	// Optional, if not provided, it means subscribe to all rarity
-	Rarity string `bson:"rarity"`
-	// Optional, can be percentage or absolute value
-	MaxPremium string `bson:"maxPremium"`
-
-	// Alarm settings. Example: Telegram, Email
-	NotiType string `bson:"notiType"`
-	// Example: Telegram chat id, or email address
-	NotiId string `bson:"notiId"`
 }

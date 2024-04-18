@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/mikezzb/steam-trading-shared/database/model"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/mikezzb/steam-trading-shared/database"
@@ -58,15 +59,16 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 }
 
 func TestListingRepo_Insert(t *testing.T) {
-	t.Run("Insert", func(t *testing.T) {
-		db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
-		if err != nil {
-			t.Error(err)
-		}
-		defer db.Disconnect()
-		repos := database.NewRepositories(db)
+	db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+	if err != nil {
+		t.Error(err)
+	}
+	defer db.Disconnect()
+	repos := database.NewRepositories(db)
+	repo := repos.GetListingRepository()
 
-		repo := repos.GetListingRepository()
+	t.Run("Insert", func(t *testing.T) {
+
 		// listingFile := "mocks/listings.json"
 		// b, err := os.ReadFile(listingFile)
 		if err != nil {
@@ -107,6 +109,86 @@ func TestListingRepo_Insert(t *testing.T) {
 
 		// delete
 		err = repo.DeleteListingByItemName(updatedListing.Name)
+		if err != nil {
+			t.Error(err)
+		}
+	})
+
+}
+
+func TestListingRepo_Upsert(t *testing.T) {
+	db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+	if err != nil {
+		t.Error(err)
+	}
+	defer db.Disconnect()
+	repos := database.NewRepositories(db)
+	repo := repos.GetListingRepository()
+
+	t.Run("Upsert", func(t *testing.T) {
+		listings := []model.Listing{
+			{
+				Name:       "★ Bayonet | Doppler (Factory New)",
+				AssetId:    "123",
+				PreviewUrl: "Old Preview URL",
+			},
+			{
+				Name:    "★ Bayonet | Doppler (Minimal Wear)",
+				AssetId: "456",
+			},
+		}
+
+		err = repo.InsertListings(listings)
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		// Upsert the transaction
+		newListings := []model.Listing{
+			// Shall update
+			{
+				Name:       "★ Bayonet | Doppler (Factory New)",
+				AssetId:    "123",
+				PreviewUrl: "New Preview URL",
+			},
+			// Shall insert
+			{
+				Name:    "★ Bayonet | Doppler (Minimal Wear)",
+				AssetId: "101112",
+			},
+			// Shall NOT update
+			{
+				Name:    "★ Bayonet | Doppler (Minimal Wear)",
+				AssetId: "456",
+			},
+		}
+
+		updatedListings, err := repo.UpsertListingsByAssetID(newListings)
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		log.Printf("Updated listings: %v", updatedListings)
+
+		// Get the item back
+		updatedListing, err := repo.FindOneListing(bson.M{
+			"assetId": listings[0].AssetId,
+		})
+		if err != nil {
+			t.Error(err)
+		}
+
+		log.Printf("Updated listing: %v", updatedListing)
+
+		// expect the preview url to be updated
+		if updatedListing.PreviewUrl != updatedListings[0].PreviewUrl {
+			t.Errorf("Preview URL not updated: %v", updatedListing.PreviewUrl)
+		}
+
+		// delete all transactions
+		err = repo.DeleteAll()
 		if err != nil {
 			t.Error(err)
 		}
