@@ -25,7 +25,7 @@ func (r *SubscriptionRepository) UpsertSubscription(subscription model.Subscript
 	return err
 }
 
-func (r *SubscriptionRepository) GetAllSubscriptions() ([]model.Subscription, error) {
+func (r *SubscriptionRepository) GetAll() ([]model.Subscription, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
 

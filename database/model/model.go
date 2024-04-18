@@ -17,6 +17,7 @@ type Listing struct {
 	ID primitive.ObjectID `bson:"_id,omitempty"`
 
 	Name             string `bson:"name"`
+	Market           string `bson:"market"`
 	Price            string `bson:"price"`
 	CreatedAt        int    `bson:"createdAt"`
 	UpdatedAt        int    `bson:"updatedAt"`
@@ -30,6 +31,9 @@ type Listing struct {
 	PaintIndex int    `bson:"paintIndex"`
 	PaintSeed  int    `bson:"paintSeed"`
 	Rarity     string `bson:"rarity"`
+
+	// Buff only
+	InstanceId string `bson:"instanceId"`
 }
 
 // Subscription on the rare patterns of an item
@@ -63,6 +67,7 @@ type Transaction struct {
 	ID primitive.ObjectID `bson:"_id,omitempty"`
 
 	Name             string `bson:"name"`
+	Market           string `bson:"market"`
 	Price            string `bson:"price"`
 	CreatedAt        int    `bson:"createdAt"`
 	UpdatedAt        int    `bson:"updatedAt"`
@@ -76,4 +81,7 @@ type Transaction struct {
 	PaintIndex int    `bson:"paintIndex"`
 	PaintSeed  int    `bson:"paintSeed"`
 	Rarity     string `bson:"rarity"`
+
+	// Buff only
+	InstanceId string `bson:"instanceId"`
 }

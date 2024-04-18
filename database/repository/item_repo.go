@@ -104,3 +104,17 @@ func (r *ItemRepository) UpdateItem(item *model.Item) error {
 	}
 	return nil
 }
+
+func (r *ItemRepository) GetAll() ([]model.Item, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	cursor, err := r.ItemCol.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+
+	var items []model.Item
+	err = cursor.All(ctx, &items)
+	return items, err
+}
