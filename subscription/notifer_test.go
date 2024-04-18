@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	subs "github.com/mikezzb/steam-trading-shared/subscription"
 )
@@ -26,5 +27,8 @@ func TestTelegram(t *testing.T) {
 
 	t.Run("TestTelegramMessage", func(t *testing.T) {
 		notifier.Notify("telegram", secrets["telegramTestChatId"], "Hello Test!")
+
+		// wait for message to be sent
+		time.Sleep(time.Second)
 	})
 }

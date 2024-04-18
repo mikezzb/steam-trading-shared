@@ -1,6 +1,7 @@
 package subscription
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 
@@ -13,7 +14,13 @@ func getItemRarityKey(itemName, rarity string) string {
 }
 
 func GetListingMessage(listing *model.Listing) string {
-	return "New listing: " + listing.Name + " " + listing.Rarity + " $" + listing.Price + "\n" + shared.GetListingUrl(listing)
+	return fmt.Sprintf(
+		"🌸 NEW LISTING 🌸\nName: %s\nTier: %s\nPrice: %s\nLink: %s",
+		listing.Name,
+		listing.Rarity,
+		listing.Price,
+		shared.GetListingUrl(listing),
+	)
 }
 
 type ParsedSubscription struct {

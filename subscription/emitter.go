@@ -22,16 +22,18 @@ type NotificationEmitter struct {
 }
 
 func NewNotificationEmitter(subRepo *repository.SubscriptionRepository, itemRepo *repository.ItemRepository, config *NotifierConfig) *NotificationEmitter {
-	return &NotificationEmitter{
+	emitter := &NotificationEmitter{
 		subRepo:        subRepo,
 		itemRepo:       itemRepo,
 		notifer:        NewNotifier(config),
 		itemRaritySubs: make(map[string][]*ParsedSubscription),
 		itemPrices:     make(map[string]float64),
 	}
+	emitter.init()
+	return emitter
 }
 
-func (e *NotificationEmitter) Init() {
+func (e *NotificationEmitter) init() {
 	// get all subscriptions
 	subs, err := e.subRepo.GetAll()
 	if err != nil {
@@ -76,8 +78,8 @@ func (e *NotificationEmitter) EmitListing(listing *model.Listing) {
 	}
 }
 
-func (e *NotificationEmitter) EmitListings(listings []*model.Listing) {
+func (e *NotificationEmitter) EmitListings(listings []model.Listing) {
 	for _, listing := range listings {
-		e.EmitListing(listing)
+		e.EmitListing(&listing)
 	}
 }
