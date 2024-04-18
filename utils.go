@@ -1,11 +1,15 @@
 package shared
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/mikezzb/steam-trading-shared/database/model"
 )
 
 var STAT_TRAK_LABEL_LEN = len(STAT_TRAK_LABEL)
@@ -56,6 +60,22 @@ func ExtractBaseItemName(name string) (baseName string) {
 		baseName = baseName[:i-1]
 	}
 	return
+}
+
+func GetListingUrl(listing *model.Listing) string {
+	switch listing.Market {
+	default:
+		// default as buff
+		buffId := GetBuffIds()[listing.Name]
+		params := url.Values{}
+		params.Add("appid", BUFF_CS_APPID)
+		params.Add("classid", listing.ClassId)
+		params.Add("instanceid", listing.InstanceId)
+		params.Add("assetid", listing.AssetId)
+
+		return fmt.Sprintf("%s/%d?%s", BUFF_ITEM_PREVIEW_BASE_URL, buffId, params.Encode())
+
+	}
 }
 
 // Shanghai timezone

@@ -67,3 +67,19 @@ func TestRandSleep(t *testing.T) {
 		RandomSleep(5, 9)
 	})
 }
+
+func TestGetListingUrl(t *testing.T) {
+	t.Run("GetListingUrlBuff", func(t *testing.T) {
+		listing := model.Listing{
+			Name:       "★ Skeleton Knife | Stained (Minimal Wear)",
+			Market:     "buff",
+			ClassId:    "3608173279",
+			InstanceId: "188530139",
+			AssetId:    "36356925895",
+		}
+		url := GetListingUrl(&listing)
+		if url != "https://buff.163.com/goods/776793?appid=730&assetid=36356925895&classid=3608173279&instanceid=188530139" {
+			t.Errorf("Expected %s, got %s", "https://buff.163.com/goods/776793?appid=730&assetid=36356925895&classid=3608173279&instanceid=188530139", url)
+		}
+	})
+}

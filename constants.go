@@ -21,6 +21,11 @@ const (
 	MARKET_NAME_UU    = "uu"
 )
 
+const (
+	BUFF_ITEM_PREVIEW_BASE_URL = "https://buff.163.com/goods"
+	BUFF_CS_APPID              = "730"
+)
+
 var WEAR_LEVELS = [5]string{"Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"}
 
 var buffIds = map[string]int{}
