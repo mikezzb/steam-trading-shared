@@ -49,6 +49,15 @@ type Subscription struct {
 	NotiId string `bson:"notiId"`
 }
 
+type User struct {
+	ID primitive.ObjectID `bson:"_id,omitempty"`
+
+	Username string `bson:"username"`
+	Password string `bson:"password"`
+
+	SubscriptionIds []primitive.ObjectID `bson:"subscriptionIds"`
+}
+
 // Currently same as Listing
 type Transaction struct {
 	ID primitive.ObjectID `bson:"_id,omitempty"`

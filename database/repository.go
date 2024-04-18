@@ -7,6 +7,7 @@ type Repositories struct {
 	itemRepo        *repository.ItemRepository
 	listingRepo     *repository.ListingRepository
 	transactionRepo *repository.TransactionRepository
+	subRepo         *repository.SubscriptionRepository
 }
 
 func NewRepositories(dbClient *DBClient) *Repositories {
@@ -41,4 +42,13 @@ func (r *Repositories) GetTransactionRepository() *repository.TransactionReposit
 		}
 	}
 	return r.transactionRepo
+}
+
+func (r *Repositories) GetSubscriptionRepository() *repository.SubscriptionRepository {
+	if r.subRepo == nil {
+		r.subRepo = &repository.SubscriptionRepository{
+			SubCol: r.dbClient.DB.Collection("subscriptions"),
+		}
+	}
+	return r.subRepo
 }

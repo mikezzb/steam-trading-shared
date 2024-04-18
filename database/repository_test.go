@@ -401,3 +401,37 @@ func TestMergeByAssetIds(t *testing.T) {
 		}
 	})
 }
+
+func TestSubscriptions(t *testing.T) {
+	db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+	if err != nil {
+		t.Error(err)
+	}
+	defer db.Disconnect()
+	repos := database.NewRepositories(db)
+
+	repo := repos.GetSubscriptionRepository()
+
+	t.Run("Subscriptions", func(t *testing.T) {
+		subscriptions := model.Subscription{
+			Name:       "★ Bayonet | Marble Fade (Factory New)",
+			Rarity:     "FFI",
+			MaxPremium: "5%",
+			NotiType:   "telegram",
+			NotiId:     "123",
+		}
+
+		err = repo.UpsertSubscription(subscriptions)
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		// delete the subscription by name
+		err = repo.DeleteSubscriptionByName(subscriptions.Name)
+		if err != nil {
+			t.Error(err)
+		}
+
+	})
+}
