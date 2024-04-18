@@ -11,7 +11,8 @@ import (
 )
 
 type ItemRepository struct {
-	ItemCol *mongo.Collection
+	ItemCol              *mongo.Collection
+	ChangeStreamCallback ChangeStreamCallback
 }
 
 func (r *ItemRepository) FindItemByName(name string) (*model.Item, error) {
@@ -117,4 +118,12 @@ func (r *ItemRepository) GetAll() ([]model.Item, error) {
 	var items []model.Item
 	err = cursor.All(ctx, &items)
 	return items, err
+}
+
+func (r *ItemRepository) DeleteAll() error {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	_, err := r.ItemCol.DeleteMany(ctx, bson.M{})
+	return err
 }

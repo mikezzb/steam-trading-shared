@@ -1,4 +1,4 @@
-package database_test
+package repository_test
 
 import (
 	"log"
@@ -6,20 +6,28 @@ import (
 	"time"
 
 	"github.com/mikezzb/steam-trading-shared/database/model"
+	"github.com/mikezzb/steam-trading-shared/database/repository"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/mikezzb/steam-trading-shared/database"
 )
 
+func RepoInit() (*database.DBClient, repository.RepoFactory, error) {
+	db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return db, repository.NewRepoFactory(db, nil), nil
+}
+
 func TestItemRepository_UpdateItem(t *testing.T) {
 	t.Run("UpdateItem", func(t *testing.T) {
-		db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+		db, repos, err := RepoInit()
+		defer db.Disconnect()
 		if err != nil {
 			t.Error(err)
 		}
-		defer db.Disconnect()
-		repos := database.NewRepositories(db)
 
 		repo := repos.GetItemRepository()
 		item := &model.Item{
@@ -64,7 +72,7 @@ func TestListingRepo_Insert(t *testing.T) {
 		t.Error(err)
 	}
 	defer db.Disconnect()
-	repos := database.NewRepositories(db)
+	repos := repository.NewRepoFactory(db, nil)
 	repo := repos.GetListingRepository()
 
 	t.Run("Insert", func(t *testing.T) {
@@ -117,12 +125,11 @@ func TestListingRepo_Insert(t *testing.T) {
 }
 
 func TestListingRepo_Upsert(t *testing.T) {
-	db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+	db, repos, err := RepoInit()
+	defer db.Disconnect()
 	if err != nil {
 		t.Error(err)
 	}
-	defer db.Disconnect()
-	repos := database.NewRepositories(db)
 	repo := repos.GetListingRepository()
 
 	t.Run("Upsert", func(t *testing.T) {
@@ -197,12 +204,11 @@ func TestListingRepo_Upsert(t *testing.T) {
 }
 
 func TestTransactionRepo_Insert(t *testing.T) {
-	db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+	db, repos, err := RepoInit()
+	defer db.Disconnect()
 	if err != nil {
 		t.Error(err)
 	}
-	defer db.Disconnect()
-	repos := database.NewRepositories(db)
 
 	repo := repos.GetTransactionRepository()
 
@@ -319,12 +325,11 @@ func TestMongoID(t *testing.T) {
 }
 
 func TestDeleteOldListing(t *testing.T) {
-	db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+	db, repos, err := RepoInit()
+	defer db.Disconnect()
 	if err != nil {
 		t.Error(err)
 	}
-	defer db.Disconnect()
-	repos := database.NewRepositories(db)
 
 	repo := repos.GetListingRepository()
 
@@ -367,12 +372,11 @@ func TestDeleteOldListing(t *testing.T) {
 }
 
 func TestMergeByAssetIds(t *testing.T) {
-	db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+	db, repos, err := RepoInit()
+	defer db.Disconnect()
 	if err != nil {
 		t.Error(err)
 	}
-	defer db.Disconnect()
-	repos := database.NewRepositories(db)
 
 	listingRepo := repos.GetListingRepository()
 	transactionRepo := repos.GetTransactionRepository()
@@ -403,12 +407,11 @@ func TestMergeByAssetIds(t *testing.T) {
 }
 
 func TestSubscriptions(t *testing.T) {
-	db, err := database.NewDBClient("mongodb://localhost:27017", "steam-trading-unit-test", time.Second*10)
+	db, repos, err := RepoInit()
+	defer db.Disconnect()
 	if err != nil {
 		t.Error(err)
 	}
-	defer db.Disconnect()
-	repos := database.NewRepositories(db)
 
 	repo := repos.GetSubscriptionRepository()
 
@@ -421,7 +424,7 @@ func TestSubscriptions(t *testing.T) {
 			NotiId:     "123",
 		}
 
-		err = repo.UpsertSubscription(subscriptions)
+		err = repo.UpsertSubscription(&subscriptions)
 
 		if err != nil {
 			t.Error(err)

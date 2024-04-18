@@ -10,10 +10,11 @@ import (
 )
 
 type SubscriptionRepository struct {
-	SubCol *mongo.Collection
+	SubCol               *mongo.Collection
+	ChangeStreamCallback ChangeStreamCallback
 }
 
-func (r *SubscriptionRepository) UpsertSubscription(subscription model.Subscription) error {
+func (r *SubscriptionRepository) UpsertSubscription(subscription *model.Subscription) error {
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
 	// upsert on name

@@ -12,7 +12,8 @@ import (
 )
 
 type ListingRepository struct {
-	ListingCol *mongo.Collection
+	ListingCol           *mongo.Collection
+	ChangeStreamCallback ChangeStreamCallback
 }
 
 func (r *ListingRepository) FindListingByItemName(name string) (*model.Listing, error) {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/mikezzb/steam-trading-shared/database"
 	"github.com/mikezzb/steam-trading-shared/database/model"
+	"github.com/mikezzb/steam-trading-shared/database/repository"
 	"github.com/mikezzb/steam-trading-shared/subscription"
 )
 
@@ -34,23 +35,48 @@ func TestEmitter(t *testing.T) {
 			t.Fatalf("TestEmitter: %v", err)
 		}
 
-		repos := database.NewRepositories(dbClient)
+		repos := repository.NewRepoFactory(dbClient, nil)
+
+		// create item
+		itemRepo := repos.GetItemRepository()
+		item := &model.Item{
+			Name:              "★ Bayonet | Marble Fade (Factory New)",
+			LowestMarketPrice: "1000",
+		}
+		itemRepo.UpdateItem(item)
+
+		// create subs
+		subRepo := repos.GetSubscriptionRepository()
+		sub := &model.Subscription{
+			Name:       "★ Bayonet | Marble Fade (Factory New)",
+			MaxPremium: "1.0",
+			Rarity:     "FFI",
+			NotiType:   "telegram",
+			NotiId:     secrets["telegramTestChatId"],
+		}
+		subRepo.UpsertSubscription(sub)
 
 		emitter := subscription.NewNotificationEmitter(
-			repos.GetSubscriptionRepository(),
-			repos.GetItemRepository(),
 			&subscription.NotifierConfig{
 				TelegramToken: secrets["telegramToken"],
 			},
 		)
 
+		emitter.Init(repos)
+
 		emitter.EmitListing(&model.Listing{
 			Name:   "★ Bayonet | Marble Fade (Factory New)",
 			Rarity: "FFI",
-			Price:  "-1",
+			Price:  "1001",
 		})
 
 		time.Sleep(1 * time.Second)
+
+		subRepo.DeleteSubscriptionByName(
+			sub.Name,
+		)
+
+		itemRepo.DeleteAll()
 
 	})
 }

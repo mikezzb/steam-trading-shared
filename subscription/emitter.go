@@ -1,47 +1,37 @@
 package subscription
 
 import (
-	"context"
 	"log"
 	"strconv"
 
 	"github.com/mikezzb/steam-trading-shared/database/model"
 	"github.com/mikezzb/steam-trading-shared/database/repository"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Event emitter pattern
 type NotificationEmitter struct {
-	subRepo  *repository.SubscriptionRepository
-	itemRepo *repository.ItemRepository
-
 	notifer *Notifier
 
-	// item name + rarity -> subscriptions
-	itemRaritySubs map[string][]*ParsedSubscription
+	// item name + rarity -> subscription key -> subscription (facilates delete & update operations)
+	itemRaritySubs map[string]map[string]*ParsedSubscription
 	// item name -> min price of item
 	itemPrices map[string]float64
-
-	// change streams
-	subChangeStream *mongo.ChangeStream
 }
 
-func NewNotificationEmitter(subRepo *repository.SubscriptionRepository, itemRepo *repository.ItemRepository, config *NotifierConfig) *NotificationEmitter {
+func NewNotificationEmitter(config *NotifierConfig) *NotificationEmitter {
 	emitter := &NotificationEmitter{
-		subRepo:        subRepo,
-		itemRepo:       itemRepo,
 		notifer:        NewNotifier(config),
-		itemRaritySubs: make(map[string][]*ParsedSubscription),
+		itemRaritySubs: make(map[string]map[string]*ParsedSubscription),
 		itemPrices:     make(map[string]float64),
 	}
-	emitter.init()
 	return emitter
 }
 
-func (e *NotificationEmitter) init() {
+func (e *NotificationEmitter) Init(repos repository.RepoFactory) {
+	subRepo := repos.GetSubscriptionRepository()
+	itemRepo := repos.GetItemRepository()
 	// get all subscriptions
-	subs, err := e.subRepo.GetAll()
+	subs, err := subRepo.GetAll()
 	if err != nil {
 		log.Fatalf("NotificationEmitter.Init: %v", err)
 		return
@@ -53,7 +43,7 @@ func (e *NotificationEmitter) init() {
 	}
 
 	// get all items
-	items, err := e.itemRepo.GetAll()
+	items, err := itemRepo.GetAll()
 	if err != nil {
 		log.Fatalf("NotificationEmitter.Init: %v", err)
 		return
@@ -63,68 +53,6 @@ func (e *NotificationEmitter) init() {
 	for _, item := range items {
 		priceFloat, _ := strconv.ParseFloat(item.LowestMarketPrice, 64)
 		e.itemPrices[item.Name] = priceFloat
-	}
-
-	// start monitoring
-	e.initMonitoring()
-}
-
-func (e *NotificationEmitter) addSub(sub *model.Subscription) {
-	key := getItemRarityKey(sub.Name, sub.Rarity)
-	e.itemRaritySubs[key] = append(e.itemRaritySubs[key], GetParsedSubscription(sub))
-}
-
-func (e *NotificationEmitter) initMonitoring() {
-	// monitor any update or insert to the subscription collection
-	changeStreamOpts := options.ChangeStream().SetFullDocument(options.UpdateLookup)
-	changeStream, err := e.subRepo.SubCol.Watch(context.Background(), mongo.Pipeline{}, changeStreamOpts)
-	if err != nil {
-		log.Fatalf("NotificationEmitter.initMonitoring: %v", err)
-		return
-	}
-	e.subChangeStream = changeStream
-
-	go e.monitorSubChanges()
-}
-
-func (e *NotificationEmitter) monitorSubChanges() {
-	defer e.subChangeStream.Close(context.Background())
-
-	// loop to monitor changes
-	for e.subChangeStream.Next(context.Background()) {
-
-		var subChange struct {
-			FullDocument  model.Subscription `bson:"fullDocument"`
-			OperationType string             `bson:"operationType"`
-		}
-		if err := e.subChangeStream.Decode(&subChange); err != nil {
-			log.Fatalf("NotificationEmitter.monitorSubChanges: %v", err)
-			return
-		}
-
-		switch subChange.OperationType {
-		case "delete":
-			// remove the subscription
-		case "update":
-			// update the subscription
-		case "insert":
-			// add the subscription
-			e.addSub(&subChange.FullDocument)
-		default:
-			log.Fatalf("NotificationEmitter.monitorSubChanges: unknown operation type %v", subChange.OperationType)
-		}
-
-		// update the subscription
-		key := getItemRarityKey(subChange.FullDocument.Name, subChange.FullDocument.Rarity)
-
-		//
-
-		e.itemRaritySubs[key] = append(e.itemRaritySubs[key], GetParsedSubscription(&subChange.FullDocument))
-	}
-
-	if err := e.subChangeStream.Err(); err != nil {
-		log.Fatalf("NotificationEmitter.monitorSubChanges: %v", err)
-		return
 	}
 }
 
@@ -148,5 +76,51 @@ func (e *NotificationEmitter) EmitListing(listing *model.Listing) {
 func (e *NotificationEmitter) EmitListings(listings []model.Listing) {
 	for _, listing := range listings {
 		e.EmitListing(&listing)
+	}
+}
+
+func (e *NotificationEmitter) addSub(sub *model.Subscription) {
+	key := getItemRarityKey(sub.Name, sub.Rarity)
+	subKey := GetSubKey(sub)
+
+	// add sub to the map
+	if _, ok := e.itemRaritySubs[key]; !ok {
+		e.itemRaritySubs[key] = make(map[string]*ParsedSubscription)
+	}
+	e.itemRaritySubs[key][subKey] = GetParsedSubscription(sub)
+}
+
+func (e *NotificationEmitter) SubChangeStreamHandler(data interface{}, operationType string) {
+	sub, _ := data.(*model.Subscription)
+	// Find the sub in the map
+	switch operationType {
+	case "insert":
+		e.addSub(sub)
+	case "delete":
+		// find the sub by key
+		key := getItemRarityKey(sub.Name, sub.Rarity)
+		subKey := GetSubKey(sub)
+		delete(e.itemRaritySubs[key], subKey)
+	case "update":
+		// find the sub by key
+		key := getItemRarityKey(sub.Name, sub.Rarity)
+		subKey := GetSubKey(sub)
+		e.itemRaritySubs[key][subKey] = GetParsedSubscription(sub)
+	default:
+		log.Fatalf("NotificationEmitter.EmitSub: invalid operation type")
+	}
+}
+
+func (e *NotificationEmitter) ListingChangeStreamHandler(data interface{}, operationType string) {
+	listing, _ := data.(*model.Listing)
+	switch operationType {
+	case "insert":
+		e.EmitListing(listing)
+	case "delete":
+		// do nothing
+	case "update":
+		e.EmitListing(listing)
+	default:
+		log.Fatalf("NotificationEmitter.EmitListing: invalid operation type")
 	}
 }

@@ -12,7 +12,8 @@ import (
 )
 
 type TransactionRepository struct {
-	TransactionCol *mongo.Collection
+	TransactionCol       *mongo.Collection
+	ChangeStreamCallback ChangeStreamCallback
 }
 
 func (r *TransactionRepository) FindTransactionByItemName(name string) (*model.Transaction, error) {

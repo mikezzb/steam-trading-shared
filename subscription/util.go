@@ -13,12 +13,24 @@ func getItemRarityKey(itemName, rarity string) string {
 	return itemName + "_" + rarity
 }
 
-func GetListingMessage(listing *model.Listing) string {
+func GetSubKey(sub *model.Subscription) string {
 	return fmt.Sprintf(
-		"🌸 NEW LISTING 🌸\nName: %s\nTier: %s\nPrice: %s\nLink: %s",
+		"%s_%s_%s_%s_%s",
+		sub.Name,
+		sub.Rarity,
+		sub.MaxPremium,
+		sub.NotiId,
+		sub.NotiType,
+	)
+}
+
+func GetListingMessage(listing *model.Listing, minPrice float64) string {
+	return fmt.Sprintf(
+		"🌸 NEW LISTING 🌸\nName: %s\nTier: %s\nPrice: %s (Min: %.1f)\nLink: %s",
 		listing.Name,
 		listing.Rarity,
 		listing.Price,
+		minPrice,
 		shared.GetListingUrl(listing),
 	)
 }
