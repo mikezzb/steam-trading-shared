@@ -20,11 +20,11 @@ func TestTelegram(t *testing.T) {
 	// unmarshal json
 	json.Unmarshal(secretsFile, &secrets)
 
-	notifier := subs.NewNotifier(subs.NotifierConfig{
+	notifier := subs.NewNotifier(&subs.NotifierConfig{
 		TelegramToken: secrets["telegramToken"],
 	})
 
 	t.Run("TestTelegramMessage", func(t *testing.T) {
-		notifier.Notify("telegram", secrets["telegramTestChatId"], "Test message")
+		notifier.Notify("telegram", secrets["telegramTestChatId"], "Hello Test!")
 	})
 }

@@ -5,6 +5,7 @@ package subscription
 import (
 	"log"
 	"strconv"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -14,6 +15,13 @@ type TelegramNotifier struct {
 	Token string
 	// telegram bot
 	bot *tgbotapi.BotAPI
+	// notification channel
+	notiCh chan NotiReq
+}
+
+type NotiReq struct {
+	ChatId  int64
+	Message string
 }
 
 func NewTelegramNotifier(token string) *TelegramNotifier {
@@ -21,26 +29,50 @@ func NewTelegramNotifier(token string) *TelegramNotifier {
 	if err != nil {
 		log.Fatalf("NewTelegramNotifier: %v", err)
 	}
-	return &TelegramNotifier{
-		Token: token,
-		bot:   bot,
+	notifier := &TelegramNotifier{
+		Token:  token,
+		bot:    bot,
+		notiCh: make(chan NotiReq),
+	}
+	go notifier.processNotifications()
+	return notifier
+}
+
+func (t *TelegramNotifier) processNotifications() {
+	// 5 messages per second rate limit
+	limiter := time.NewTicker(time.Second / 5)
+	defer limiter.Stop()
+
+	for range limiter.C {
+		select {
+		case req := <-t.notiCh:
+			t.sendMessage(req.ChatId, req.Message)
+		default:
+		}
+	}
+}
+
+func (t *TelegramNotifier) sendMessage(chatId int64, message string) {
+	msg := tgbotapi.NewMessage(
+		chatId,
+		message,
+	)
+	_, err := t.bot.Send(msg)
+	if err != nil {
+		log.Fatalf("sendMessage: %v", err)
 	}
 }
 
 func (t *TelegramNotifier) Notify(chatId, message string) {
 	// send telegram message
 	chatIdInt, err := strconv.ParseInt(chatId, 10, 64)
+
 	if err != nil {
 		log.Fatalf("Notify: %v", err)
 	}
 
-	msg := tgbotapi.NewMessage(
-		chatIdInt,
-		message,
-	)
-
-	_, err = t.bot.Send(msg)
-	if err != nil {
-		log.Fatalf("Notify: %v", err)
+	t.notiCh <- NotiReq{
+		ChatId:  chatIdInt,
+		Message: message,
 	}
 }

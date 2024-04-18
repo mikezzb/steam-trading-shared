@@ -21,7 +21,7 @@ type NotifierConfig struct {
 	TelegramToken string
 }
 
-func NewNotifier(config NotifierConfig) *Notifier {
+func NewNotifier(config *NotifierConfig) *Notifier {
 	notifiers := make(map[string]BaseNotifier)
 	notifiers["telegram"] = NewTelegramNotifier(config.TelegramToken)
 	return &Notifier{
