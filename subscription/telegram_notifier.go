@@ -32,7 +32,7 @@ func NewTelegramNotifier(token string) *TelegramNotifier {
 	notifier := &TelegramNotifier{
 		Token:  token,
 		bot:    bot,
-		notiCh: make(chan NotiReq),
+		notiCh: make(chan NotiReq, 100),
 	}
 	go notifier.processNotifications()
 	return notifier
@@ -75,4 +75,8 @@ func (t *TelegramNotifier) Notify(chatId, message string) {
 		ChatId:  chatIdInt,
 		Message: message,
 	}
+}
+
+func (t *TelegramNotifier) Close() {
+	close(t.notiCh)
 }

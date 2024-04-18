@@ -26,6 +26,10 @@ const (
 	BUFF_CS_APPID              = "730"
 )
 
+const (
+	SECRET_TELEGRAM_TOKEN = "telegramToken"
+)
+
 var WEAR_LEVELS = [5]string{"Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"}
 
 var buffIds = map[string]int{}

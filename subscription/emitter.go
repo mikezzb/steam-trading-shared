@@ -75,3 +75,9 @@ func (e *NotificationEmitter) EmitListing(listing *model.Listing) {
 		}
 	}
 }
+
+func (e *NotificationEmitter) EmitListings(listings []*model.Listing) {
+	for _, listing := range listings {
+		e.EmitListing(listing)
+	}
+}
