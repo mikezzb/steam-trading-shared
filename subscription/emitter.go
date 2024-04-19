@@ -79,6 +79,9 @@ func (e *NotificationEmitter) EmitListings(listings []model.Listing) {
 	}
 }
 
+// Dangerous to use pointer:
+// when I create a parsed sub, the sub pointer is from the & of a range result, which got overwritten, so the pointer points to the same sub always
+
 func (e *NotificationEmitter) addSub(sub *model.Subscription) {
 	key := getItemRarityKey(sub.Name, sub.Rarity)
 	subKey := GetSubKey(sub)
@@ -123,4 +126,23 @@ func (e *NotificationEmitter) ListingChangeStreamHandler(data interface{}, opera
 	default:
 		log.Fatalf("NotificationEmitter.EmitListing: invalid operation type")
 	}
+}
+func (e *NotificationEmitter) IsPriceMatch(price string, sub *ParsedSubscription) bool {
+	minPrice := e.itemPrices[sub.Subscription.Name]
+	priceFloat, _ := strconv.ParseFloat(price, 64)
+
+	// if price is less than current min price, update item price
+	if priceFloat < minPrice {
+		e.itemPrices[sub.Subscription.Name] = priceFloat
+		return true
+	}
+
+	var maxPriceMatch float64
+	if sub.PremiumPerc != -1 {
+		maxPriceMatch = minPrice * (1 + sub.PremiumPerc)
+	} else {
+		maxPriceMatch = minPrice + sub.Premium
+	}
+
+	return priceFloat <= maxPriceMatch
 }

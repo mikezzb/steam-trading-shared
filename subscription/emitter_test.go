@@ -39,22 +39,45 @@ func TestEmitter(t *testing.T) {
 
 		// create item
 		itemRepo := repos.GetItemRepository()
-		item := &model.Item{
-			Name:              "★ Bayonet | Marble Fade (Factory New)",
-			LowestMarketPrice: "1000",
+		items := []*model.Item{
+			{
+				Name:              "★ Bayonet | Marble Fade (Factory New)",
+				LowestMarketPrice: "1000",
+			},
+			{
+				Name:              "★ Flip Knife | Marble Fade (Factory New)",
+				LowestMarketPrice: "100",
+			},
 		}
-		itemRepo.UpdateItem(item)
+
+		for _, item := range items {
+			itemRepo.UpdateItem(item)
+		}
 
 		// create subs
 		subRepo := repos.GetSubscriptionRepository()
-		sub := &model.Subscription{
-			Name:       "★ Bayonet | Marble Fade (Factory New)",
-			MaxPremium: "1.0",
-			Rarity:     "FFI",
-			NotiType:   "telegram",
-			NotiId:     secrets["telegramTestChatId"],
+		subs := []*model.Subscription{
+			{
+				Name:       "★ Bayonet | Marble Fade (Factory New)",
+				MaxPremium: "1.0",
+				Rarity:     "FFI",
+				NotiType:   "telegram",
+				NotiId:     secrets["telegramTestChatId"],
+			},
+			{
+				Name:       "★ Flip Knife | Marble Fade (Factory New)",
+				MaxPremium: "1.0",
+				Rarity:     "FFI",
+				NotiType:   "telegram",
+				NotiId:     secrets["telegramTestChatId"],
+			},
 		}
-		subRepo.UpsertSubscription(sub)
+
+		for _, sub := range subs {
+			subRepo.UpsertSubscription(sub)
+		}
+
+		time.Sleep(500 * time.Millisecond)
 
 		emitter := subscription.NewNotificationEmitter(
 			&subscription.NotifierConfig{
@@ -72,9 +95,7 @@ func TestEmitter(t *testing.T) {
 
 		time.Sleep(1 * time.Second)
 
-		subRepo.DeleteSubscriptionByName(
-			sub.Name,
-		)
+		subRepo.DeleteAll()
 
 		itemRepo.DeleteAll()
 

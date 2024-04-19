@@ -66,6 +66,10 @@ func (r *ListingRepository) UpsertListingsByAssetID(listings []model.Listing) ([
 		// if created or updated
 		if result.UpsertedID != nil || result.ModifiedCount > 0 {
 			updatedListings = append(updatedListings, listing)
+
+			if r.ChangeStreamCallback != nil {
+				r.ChangeStreamCallback(&listing, "update")
+			}
 		}
 	}
 

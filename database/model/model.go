@@ -60,6 +60,8 @@ type User struct {
 	Password string `bson:"password"`
 
 	SubscriptionIds []primitive.ObjectID `bson:"subscriptionIds"`
+	FavItemIds      []primitive.ObjectID `bson:"favItemIds"`
+	FavListingIds   []primitive.ObjectID `bson:"favListingIds"`
 }
 
 // Currently same as Listing

@@ -22,7 +22,19 @@ func (r *SubscriptionRepository) UpsertSubscription(subscription *model.Subscrip
 	update := bson.M{"$set": subscription}
 	opts := options.Update().SetUpsert(true)
 
-	_, err := r.SubCol.UpdateOne(ctx, filter, update, opts)
+	result, err := r.SubCol.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		return err
+	}
+
+	if r.ChangeStreamCallback != nil {
+		if result.UpsertedID != nil {
+			r.ChangeStreamCallback(subscription, "insert")
+		} else {
+			r.ChangeStreamCallback(subscription, "update")
+		}
+	}
+
 	return err
 }
 
@@ -44,6 +56,23 @@ func (r *SubscriptionRepository) DeleteSubscriptionByName(name string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
 
-	_, err := r.SubCol.DeleteOne(ctx, bson.M{"name": name})
+	result, err := r.SubCol.DeleteOne(ctx, bson.M{"name": name})
+
+	if err != nil {
+		return err
+	}
+
+	if r.ChangeStreamCallback != nil {
+		r.ChangeStreamCallback(result, "delete")
+	}
+
+	return err
+}
+
+func (r *SubscriptionRepository) DeleteAll() error {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	_, err := r.SubCol.DeleteMany(ctx, bson.M{})
 	return err
 }
