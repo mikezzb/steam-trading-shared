@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
+	"time"
 )
 
 const (
@@ -19,6 +20,7 @@ const (
 	MARKET_NAME_BUFF  = "buff"
 	MARKET_NAME_STEAM = "steam"
 	MARKET_NAME_UU    = "uu"
+	MARKET_NAME_IGXE  = "igxe"
 )
 
 const (
@@ -30,7 +32,18 @@ const (
 	SECRET_TELEGRAM_TOKEN = "telegramToken"
 )
 
-var WEAR_LEVELS = [5]string{"Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"}
+const (
+	MAX_SAFE_STR = "999999999999"
+)
+
+// configs
+const (
+	FRESH_PRICE_DURATION = 60 * time.Minute
+)
+
+var WEAR_LEVELS = []string{"Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"}
+
+var ITEM_MARKET_NAMES = []string{MARKET_NAME_BUFF, MARKET_NAME_STEAM, MARKET_NAME_UU, MARKET_NAME_IGXE}
 
 var buffIds = map[string]int{}
 var rarePatternMap = RarePatternMap{}

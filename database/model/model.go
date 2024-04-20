@@ -2,15 +2,22 @@ package model
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
+type MarketPrice struct {
+	Price     string `bson:"price" json:"price"`
+	UpdatedAt int64  `bson:"updatedAt" json:"updatedAt"`
+}
+
 type Item struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
-	Name              string `bson:"name" json:"name"`
-	IconUrl           string `bson:"iconUrl" json:"iconUrl"`
-	LowestMarketPrice string `bson:"lowestMarketPrice" json:"lowestMarketPrice"`
-	LowestMarketName  string `bson:"lowestMarketName" json:"lowestMarketName"`
-	SteamPrice        string `bson:"steamPrice" json:"steamPrice"`
-	UpdateAt          int    `bson:"updateAt" json:"updateAt"`
+	Name    string `bson:"name" json:"name"`
+	IconUrl string `bson:"iconUrl" json:"iconUrl"`
+
+	// Market prices
+	BuffPrice  MarketPrice `bson:"buffPrice" json:"buffPrice"`
+	UUPrice    MarketPrice `bson:"uuPrice" json:"uuPrice"`
+	IgxePrice  MarketPrice `bson:"igxePrice" json:"igxePrice"`
+	SteamPrice MarketPrice `bson:"steamPrice" json:"steamPrice"`
 }
 
 type Listing struct {
@@ -19,8 +26,8 @@ type Listing struct {
 	Name             string `bson:"name"`
 	Market           string `bson:"market"`
 	Price            string `bson:"price"`
-	CreatedAt        int    `bson:"createdAt"`
-	UpdatedAt        int    `bson:"updatedAt"`
+	CreatedAt        int64  `bson:"createdAt"`
+	UpdatedAt        int64  `bson:"updatedAt"`
 	PreviewUrl       string `bson:"previewUrl"`
 	GoodsId          int    `bson:"goodsId"`
 	ClassId          string `bson:"classId"`
@@ -71,8 +78,8 @@ type Transaction struct {
 	Name             string `bson:"name"`
 	Market           string `bson:"market"`
 	Price            string `bson:"price"`
-	CreatedAt        int    `bson:"createdAt"`
-	UpdatedAt        int    `bson:"updatedAt"`
+	CreatedAt        int64  `bson:"createdAt"`
+	UpdatedAt        int64  `bson:"updatedAt"`
 	PreviewUrl       string `bson:"previewUrl"`
 	GoodsId          int    `bson:"goodsId"`
 	ClassId          string `bson:"classId"`

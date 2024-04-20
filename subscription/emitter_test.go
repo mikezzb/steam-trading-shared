@@ -41,12 +41,18 @@ func TestEmitter(t *testing.T) {
 		itemRepo := repos.GetItemRepository()
 		items := []*model.Item{
 			{
-				Name:              "★ Bayonet | Marble Fade (Factory New)",
-				LowestMarketPrice: "1000",
+				Name: "★ Bayonet | Marble Fade (Factory New)",
+				BuffPrice: model.MarketPrice{
+					Price:     "1000",
+					UpdatedAt: time.Now().Unix(),
+				},
 			},
 			{
-				Name:              "★ Flip Knife | Marble Fade (Factory New)",
-				LowestMarketPrice: "100",
+				Name: "★ Flip Knife | Marble Fade (Factory New)",
+				BuffPrice: model.MarketPrice{
+					Price:     "100",
+					UpdatedAt: time.Now().Unix(),
+				},
 			},
 		}
 

@@ -30,9 +30,10 @@ func sameItem(item1, item2 *model.Item) bool {
 	}
 	return item1.Name == item2.Name &&
 		item1.IconUrl == item2.IconUrl &&
-		item1.LowestMarketPrice == item2.LowestMarketPrice &&
-		item1.LowestMarketName == item2.LowestMarketName &&
-		item1.SteamPrice == item2.SteamPrice
+		item1.BuffPrice.UpdatedAt == item2.BuffPrice.UpdatedAt &&
+		item1.IgxePrice.UpdatedAt == item2.IgxePrice.UpdatedAt &&
+		item1.UUPrice.UpdatedAt == item2.UUPrice.UpdatedAt &&
+		item1.SteamPrice.UpdatedAt == item2.SteamPrice.UpdatedAt
 }
 
 func (r *ItemRepository) DeleteItemByName(item *model.Item) error {
@@ -59,15 +60,23 @@ func GetItemUpdateBson(oldItem, newItem *model.Item) interface{} {
 	if oldItem.IconUrl != newItem.IconUrl {
 		item["iconUrl"] = newItem.IconUrl
 	}
-	if oldItem.LowestMarketPrice != newItem.LowestMarketPrice {
-		item["lowestMarketPrice"] = newItem.LowestMarketPrice
+
+	if oldItem.BuffPrice.UpdatedAt != newItem.BuffPrice.UpdatedAt {
+		item["buffPrice"] = newItem.BuffPrice
 	}
-	if oldItem.LowestMarketName != newItem.LowestMarketName {
-		item["lowestMarketName"] = newItem.LowestMarketName
+
+	if oldItem.IgxePrice.UpdatedAt != newItem.IgxePrice.UpdatedAt {
+		item["igxePrice"] = newItem.IgxePrice
 	}
-	if oldItem.SteamPrice != newItem.SteamPrice {
+
+	if oldItem.UUPrice.UpdatedAt != newItem.UUPrice.UpdatedAt {
+		item["uuPrice"] = newItem.UUPrice
+	}
+
+	if oldItem.SteamPrice.UpdatedAt != newItem.SteamPrice.UpdatedAt {
 		item["steamPrice"] = newItem.SteamPrice
 	}
+
 	return bson.M{
 		"$set": item,
 	}
@@ -76,25 +85,18 @@ func GetItemUpdateBson(oldItem, newItem *model.Item) interface{} {
 func (r *ItemRepository) UpdateItem(item *model.Item) error {
 	// clone item for modification
 	item = &model.Item{
-		Name:              item.Name,
-		IconUrl:           item.IconUrl,
-		LowestMarketPrice: item.LowestMarketPrice,
-		LowestMarketName:  item.LowestMarketName,
-		SteamPrice:        item.SteamPrice,
+		Name:       item.Name,
+		IconUrl:    item.IconUrl,
+		SteamPrice: item.SteamPrice,
+		BuffPrice:  item.BuffPrice,
+		IgxePrice:  item.IgxePrice,
+		UUPrice:    item.UUPrice,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
 
 	// find existing item by name
-	oldItem, err := r.FindItemByName(item.Name)
-	// sync price if oldItem exists
-	if err == nil {
-		// if item is NOT better than oldItem, keep oldItem's price
-		if item.Name != oldItem.Name && item.LowestMarketPrice > oldItem.LowestMarketPrice {
-			item.LowestMarketPrice = oldItem.LowestMarketPrice
-			item.LowestMarketName = oldItem.LowestMarketName
-		}
-	}
+	oldItem, _ := r.FindItemByName(item.Name)
 	// upsert if has delta
 	if !sameItem(oldItem, item) {
 		opt := options.Update().SetUpsert(true)

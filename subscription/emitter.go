@@ -4,6 +4,7 @@ import (
 	"log"
 	"strconv"
 
+	shared "github.com/mikezzb/steam-trading-shared"
 	"github.com/mikezzb/steam-trading-shared/database/model"
 	"github.com/mikezzb/steam-trading-shared/database/repository"
 )
@@ -51,7 +52,9 @@ func (e *NotificationEmitter) Init(repos repository.RepoFactory) {
 
 	// group items by name
 	for _, item := range items {
-		priceFloat, _ := strconv.ParseFloat(item.LowestMarketPrice, 64)
+		// get the lowest market price
+		bestPrice := shared.GetFreshBestPrice(&item, shared.FRESH_PRICE_DURATION)
+		priceFloat, _ := strconv.ParseFloat(bestPrice.Price, 64)
 		e.itemPrices[item.Name] = priceFloat
 	}
 }
@@ -128,11 +131,11 @@ func (e *NotificationEmitter) ListingChangeStreamHandler(data interface{}, opera
 	}
 }
 func (e *NotificationEmitter) IsPriceMatch(price string, sub *ParsedSubscription) bool {
-	minPrice := e.itemPrices[sub.Subscription.Name]
+	minPrice, ok := e.itemPrices[sub.Subscription.Name]
 	priceFloat, _ := strconv.ParseFloat(price, 64)
 
 	// if price is less than current min price, update item price
-	if priceFloat < minPrice {
+	if priceFloat < minPrice || !ok {
 		e.itemPrices[sub.Subscription.Name] = priceFloat
 		return true
 	}

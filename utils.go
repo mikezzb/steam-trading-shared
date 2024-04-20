@@ -86,6 +86,10 @@ func GetTimestampNow() string {
 	return strconv.FormatInt(timestamp, 10)
 }
 
+func GetUnixNow() int64 {
+	return time.Now().Unix()
+}
+
 func GetTier(name string, paintSeed int) string {
 	baseName := ExtractBaseItemName(name)
 	tiers, ok := GetRarePatterns()[baseName]
@@ -120,4 +124,73 @@ func RandomSleep(min, max int) {
 	randVal := GetRandomSleepDuration(min, max)
 	log.Printf("Sleeping for %v\n", randVal)
 	time.Sleep(randVal)
+}
+
+func GetMarketPrice(item *model.Item, marketName string) *model.MarketPrice {
+	switch marketName {
+	case MARKET_NAME_BUFF:
+		return &item.BuffPrice
+	case MARKET_NAME_STEAM:
+		return &item.SteamPrice
+	case MARKET_NAME_IGXE:
+		return &item.IgxePrice
+	case MARKET_NAME_UU:
+		return &item.UUPrice
+	}
+	return nil
+}
+
+// @return best price, market name
+func GetBestPrice(item *model.Item) *model.MarketPrice {
+	if item == nil {
+		return nil
+	}
+
+	var lowestPrice *model.MarketPrice = nil
+
+	for _, marketName := range ITEM_MARKET_NAMES {
+		price := GetMarketPrice(item, marketName)
+		if price == nil {
+			continue
+		}
+		if lowestPrice == nil || price.Price < lowestPrice.Price {
+			lowestPrice = price
+		}
+	}
+
+	return lowestPrice
+}
+
+// @return fresh best price, market name
+func GetFreshBestPrice(item *model.Item, expireDuration time.Duration) *model.MarketPrice {
+	if item == nil {
+		return nil
+	}
+
+	var lowestPrice *model.MarketPrice = nil
+	now := time.Now()
+
+	for _, marketName := range ITEM_MARKET_NAMES {
+		price := GetMarketPrice(item, marketName)
+		if price == nil {
+			continue
+		}
+
+		// check if price is expired
+		updatedAtTime := time.Unix(price.UpdatedAt, 0)
+		if updatedAtTime.Add(expireDuration).Before(now) {
+			continue
+		}
+
+		if lowestPrice == nil || price.Price < lowestPrice.Price {
+			lowestPrice = price
+		}
+	}
+
+	// if all prices are expired, return the lowest price
+	if lowestPrice == nil {
+		return GetBestPrice(item)
+	}
+
+	return lowestPrice
 }
