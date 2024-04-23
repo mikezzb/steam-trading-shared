@@ -2,6 +2,7 @@ package shared
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -13,6 +14,7 @@ const (
 	STAT_TRAK_LABEL    = "StatTrak™ "
 	STAR_LEBEL         = "★ "
 	BUFF_IDS_PATH      = "shared/data/buff/buffids.json"
+	IGXE_IDS_PATH      = "shared/data/igxe/igxeids.json"
 	RARE_PATTERNS_PATH = "shared/data/items/rare_patterns.json"
 )
 
@@ -46,10 +48,14 @@ var WEAR_LEVELS = []string{"Factory New", "Minimal Wear", "Field-Tested", "Well-
 var ITEM_MARKET_NAMES = []string{MARKET_NAME_BUFF, MARKET_NAME_STEAM, MARKET_NAME_UU, MARKET_NAME_IGXE}
 
 var buffIds = map[string]int{}
+var igxeIds = map[string]int{}
 var rarePatternMap = RarePatternMap{}
-var buffIdOnce sync.Once
-var rarePatternOnce sync.Once
 var sharedBasePath string
+
+// syncs
+var buffIdOnce sync.Once
+var igxeIdOnce sync.Once
+var rarePatternOnce sync.Once
 
 func init() {
 	_, filename, _, _ := runtime.Caller(0)
@@ -59,6 +65,8 @@ func init() {
 func loadJSON(path string, data interface{}) error {
 	// construct absolute file path
 	filePath := filepath.Join(sharedBasePath, path)
+
+	log.Printf("loading json file: %s", filePath)
 
 	// load json file
 	jsonData, err := os.ReadFile(filePath)
@@ -81,6 +89,16 @@ func GetBuffIds() map[string]int {
 		}
 	})
 	return buffIds
+}
+
+// GetIgxeIds returns the map of item name to igxe id
+func GetIgxeIds() map[string]int {
+	igxeIdOnce.Do(func() {
+		if err := loadJSON(IGXE_IDS_PATH, &igxeIds); err != nil {
+			panic(err)
+		}
+	})
+	return igxeIds
 }
 
 func GetRarePatterns() RarePatternMap {
