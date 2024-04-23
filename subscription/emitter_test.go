@@ -80,7 +80,7 @@ func TestEmitter(t *testing.T) {
 		}
 
 		for _, sub := range subs {
-			subRepo.UpsertSubscription(sub)
+			subRepo.InsertSubscription(sub)
 		}
 
 		time.Sleep(500 * time.Millisecond)

@@ -16,13 +16,38 @@ type ListingRepository struct {
 	ChangeStreamCallback ChangeStreamCallback
 }
 
-func (r *ListingRepository) FindListingByItemName(name string) (*model.Listing, error) {
+func (r *ListingRepository) GetListingByItemName(name string) (*model.Listing, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
 
 	var listing model.Listing
 	err := r.ListingCol.FindOne(ctx, bson.M{"name": name}).Decode(&listing)
 	return &listing, err
+}
+
+func (r *ListingRepository) GetListingsByPage(page int, pageSize int, filters map[string]interface{}) ([]model.Listing, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	filtersBson := MapToBson(filters)
+	opts := options.Find().SetSkip(int64(page * pageSize)).SetLimit(int64(pageSize))
+
+	cursor, err := r.ListingCol.Find(ctx, filtersBson, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var listings []model.Listing
+	err = cursor.All(ctx, &listings)
+	return listings, err
+}
+
+func (r *ListingRepository) Count() (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	return r.ListingCol.CountDocuments(ctx, bson.M{})
 }
 
 func (r *ListingRepository) FindOneListing(filter bson.M) (*model.Listing, error) {
@@ -54,7 +79,11 @@ func (r *ListingRepository) UpsertListingsByAssetID(listings []model.Listing) ([
 
 	// upsert each listing to know which one was really updated / created
 	for _, listing := range listings {
-		filter := bson.M{"assetId": listing.AssetId}
+		// also need to filter by market name since different markets can have different prices for the same asset
+		filter := bson.M{
+			"assetId": listing.AssetId,
+			"market":  listing.Market,
+		}
 		update := bson.M{"$set": listing}
 		opts := options.Update().SetUpsert(true)
 

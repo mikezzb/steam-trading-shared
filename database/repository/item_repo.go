@@ -122,6 +122,40 @@ func (r *ItemRepository) GetAll() ([]model.Item, error) {
 	return items, err
 }
 
+func (r *ItemRepository) GetItemsByPage(page, size int, filters map[string]interface{}) ([]model.Item, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	filtersBson := MapToBson(filters)
+
+	opts := options.Find().SetSkip(int64(page * size)).SetLimit(int64(size))
+
+	cursor, err := r.ItemCol.Find(ctx, filtersBson, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	var items []model.Item
+	err = cursor.All(ctx, &items)
+	return items, err
+}
+
+func (r *ItemRepository) Count() (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	return r.ItemCol.CountDocuments(ctx, bson.M{})
+}
+
+func (r *ItemRepository) GetItemByName(name string) (*model.Item, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	var item model.Item
+	err := r.ItemCol.FindOne(ctx, bson.M{"name": name}).Decode(&item)
+	return &item, err
+}
+
 func (r *ItemRepository) DeleteAll() error {
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()

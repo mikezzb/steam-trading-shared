@@ -104,7 +104,7 @@ func TestListingRepo_Insert(t *testing.T) {
 		}
 
 		// Get the item back
-		updatedListing, err := repo.FindListingByItemName(listings[0].Name)
+		updatedListing, err := repo.GetListingByItemName(listings[0].Name)
 		if err != nil {
 			t.Error(err)
 		}
@@ -424,7 +424,7 @@ func TestSubscriptions(t *testing.T) {
 			NotiId:     "123",
 		}
 
-		err = repo.UpsertSubscription(&subscriptions)
+		_, err = repo.InsertSubscription(&subscriptions)
 
 		if err != nil {
 			t.Error(err)

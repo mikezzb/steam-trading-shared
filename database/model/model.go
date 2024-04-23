@@ -39,7 +39,7 @@ type Listing struct {
 	PaintSeed  int    `bson:"paintSeed"`
 	Rarity     string `bson:"rarity"`
 
-	// Buff only
+	// Market specific ID
 	InstanceId string `bson:"instanceId"`
 }
 
@@ -58,6 +58,8 @@ type Subscription struct {
 	NotiType string `bson:"notiType"`
 	// Example: Telegram chat id, or email address
 	NotiId string `bson:"notiId"`
+
+	OwnerId primitive.ObjectID `bson:"ownerId"`
 }
 
 type User struct {

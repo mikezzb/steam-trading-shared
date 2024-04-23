@@ -7,6 +7,7 @@ type RepoFactory interface {
 	GetListingRepository() *ListingRepository
 	GetTransactionRepository() *TransactionRepository
 	GetSubscriptionRepository() *SubscriptionRepository
+	GetUserRepository() *UserRepository
 }
 
 type Repositories struct {
@@ -16,6 +17,7 @@ type Repositories struct {
 	listingRepo          *ListingRepository
 	transactionRepo      *TransactionRepository
 	subscriptionRepo     *SubscriptionRepository
+	userRepo             *UserRepository
 }
 
 type ChangeStreamHandlers struct {
@@ -76,4 +78,13 @@ func (r *Repositories) GetSubscriptionRepository() *SubscriptionRepository {
 		}
 	}
 	return r.subscriptionRepo
+}
+
+func (r *Repositories) GetUserRepository() *UserRepository {
+	if r.userRepo == nil {
+		r.userRepo = &UserRepository{
+			UserCol: r.dbClient.DB.Collection("users"),
+		}
+	}
+	return r.userRepo
 }

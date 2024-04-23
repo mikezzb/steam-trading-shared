@@ -43,3 +43,11 @@ func GetTimestampNow() string {
 	timestamp := currTime.UnixNano() / int64(time.Millisecond)
 	return strconv.FormatInt(timestamp, 10)
 }
+
+func MapToBson(m map[string]interface{}) bson.M {
+	b := bson.M{}
+	for k, v := range m {
+		b[k] = v
+	}
+	return b
+}

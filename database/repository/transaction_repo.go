@@ -51,7 +51,10 @@ func (r *TransactionRepository) UpsertTransactionsByAssetID(transactions []model
 
 	var operations []mongo.WriteModel
 	for _, transaction := range transactions {
-		filter := bson.M{"assetId": transaction.AssetId}
+		filter := bson.M{
+			"assetId": transaction.AssetId,
+			"market":  transaction.Market,
+		}
 		update := bson.M{"$set": transaction}
 		model := mongo.NewUpdateOneModel().
 			SetFilter(filter).

@@ -64,6 +64,8 @@ func ExtractBaseItemName(name string) (baseName string) {
 
 func GetListingUrl(listing *model.Listing) string {
 	switch listing.Market {
+	case MARKET_NAME_IGXE:
+		return fmt.Sprintf("https://www.igxe.cn/product-%s", listing.InstanceId)
 	default:
 		// default as buff
 		buffId := GetBuffIds()[listing.Name]
@@ -88,6 +90,11 @@ func GetTimestampNow() string {
 
 func GetUnixNow() int64 {
 	return time.Now().Unix()
+}
+
+// consist to json number
+func GetUnixFloat() float64 {
+	return float64(GetUnixNow())
 }
 
 func GetTier(name string, paintSeed int) string {
@@ -193,4 +200,28 @@ func GetFreshBestPrice(item *model.Item, expireDuration time.Duration) *model.Ma
 	}
 
 	return lowestPrice
+}
+
+// Convert a timestamp string in format "2006-01-02T15:04:05" to unix timestamp
+func ConvertToUnixTimestamp(timestamp string) (int64, error) {
+	layout := "2006-01-02T15:04:05"
+
+	return ConvertToUnix(timestamp, layout)
+}
+
+func ConvertToUnix(timestamp string, layout string) (int64, error) {
+	t, err := time.Parse(layout, timestamp)
+	if err != nil {
+		return 0, err
+	}
+
+	unixTimestamp := t.Unix()
+
+	return unixTimestamp, nil
+}
+
+func ConvertChineseDateToUnix(date string) (int64, error) {
+	layout := "2006年01月02日"
+
+	return ConvertToUnix(date, layout)
 }
