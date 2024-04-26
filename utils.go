@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mikezzb/steam-trading-shared/database/model"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var STAT_TRAK_LABEL_LEN = len(STAT_TRAK_LABEL)
@@ -92,6 +93,10 @@ func GetUnixNow() int64 {
 	return time.Now().Unix()
 }
 
+func GetNow() time.Time {
+	return time.Now()
+}
+
 // consist to json number
 func GetUnixFloat() float64 {
 	return float64(GetUnixNow())
@@ -160,7 +165,7 @@ func GetBestPrice(item *model.Item) *model.MarketPrice {
 		if price == nil {
 			continue
 		}
-		if lowestPrice == nil || price.Price < lowestPrice.Price {
+		if lowestPrice == nil || DecCompareTo(price.Price, lowestPrice.Price) == -1 {
 			lowestPrice = price
 		}
 	}
@@ -184,12 +189,12 @@ func GetFreshBestPrice(item *model.Item, expireDuration time.Duration) *model.Ma
 		}
 
 		// check if price is expired
-		updatedAtTime := time.Unix(price.UpdatedAt, 0)
+		updatedAtTime := price.UpdatedAt
 		if updatedAtTime.Add(expireDuration).Before(now) {
 			continue
 		}
 
-		if lowestPrice == nil || price.Price < lowestPrice.Price {
+		if lowestPrice == nil || DecCompareTo(price.Price, lowestPrice.Price) == -1 {
 			lowestPrice = price
 		}
 	}
@@ -200,13 +205,6 @@ func GetFreshBestPrice(item *model.Item, expireDuration time.Duration) *model.Ma
 	}
 
 	return lowestPrice
-}
-
-// Convert a timestamp string in format "2006-01-02T15:04:05" to unix timestamp
-func ConvertToUnixTimestamp(timestamp string) (int64, error) {
-	layout := "2006-01-02T15:04:05"
-
-	return ConvertToUnix(timestamp, layout)
 }
 
 func ConvertToUnix(timestamp string, layout string) (int64, error) {
@@ -220,8 +218,55 @@ func ConvertToUnix(timestamp string, layout string) (int64, error) {
 	return unixTimestamp, nil
 }
 
+// Convert a timestamp string in format "2006-01-02T15:04:05" to unix timestamp
+func ConvertToUnixTimestamp(timestamp string) (int64, error) {
+	layout := "2006-01-02T15:04:05"
+
+	return ConvertToUnix(timestamp, layout)
+}
+
 func ConvertChineseDateToUnix(date string) (int64, error) {
 	layout := "2006年01月02日"
 
 	return ConvertToUnix(date, layout)
+}
+
+func ParseChineseDate(date string) (time.Time, error) {
+	layout := "2006年01月02日"
+
+	return time.Parse(layout, date)
+}
+
+// Parse a timestamp string in format "2006-01-02T15:04:05" to time.Time
+func ParseDateHhmmss(date string) (time.Time, error) {
+	layout := "2006-01-02T15:04:05"
+
+	return time.Parse(layout, date)
+}
+
+func UnixToTime(unix int64) time.Time {
+	return time.Unix(unix, 0)
+}
+
+// Compare two Decimal128, return -1 if a < b, 0 if a == b, 1 if a > b
+func DecCompareTo(a, b primitive.Decimal128) int {
+	aStr := a.String()
+	bStr := b.String()
+
+	if aStr == bStr {
+		return 0
+	}
+	if aStr < bStr {
+		return -1
+	}
+	return 1
+}
+
+// Get a Decimal128 from a string, ignore error
+func GetDecimal128(s string) primitive.Decimal128 {
+	d128, err := primitive.ParseDecimal128(s)
+	if err != nil {
+		return MAX_DECIMAL128
+	}
+	return d128
 }

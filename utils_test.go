@@ -83,3 +83,27 @@ func TestGetListingUrl(t *testing.T) {
 		}
 	})
 }
+
+func TestStringPrice(t *testing.T) {
+	t.Run("StringPrice", func(t *testing.T) {
+		testVals := []string{
+			"-1",
+			"0.000000000000000000000000534",
+			"0.01",
+			"0.1",
+			"1",
+			"10",
+			"900",
+			"23",
+			"952340",
+			"100000",
+			"1000000",
+		}
+
+		for _, val := range testVals {
+			if MAX_DECIMAL128.String() < val {
+				t.Errorf("invalid price smaller than 0.01")
+			}
+		}
+	})
+}

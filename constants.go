@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"sync"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
@@ -37,6 +39,8 @@ const (
 const (
 	MAX_SAFE_STR = "999999999999"
 )
+
+var MAX_DECIMAL128, _ = primitive.ParseDecimal128("9999999999999999")
 
 // configs
 const (

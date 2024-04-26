@@ -54,7 +54,7 @@ func (e *NotificationEmitter) Init(repos repository.RepoFactory) {
 	for _, item := range items {
 		// get the lowest market price
 		bestPrice := shared.GetFreshBestPrice(&item, shared.FRESH_PRICE_DURATION)
-		priceFloat, _ := strconv.ParseFloat(bestPrice.Price, 64)
+		priceFloat, _ := strconv.ParseFloat(bestPrice.Price.String(), 64)
 		e.itemPrices[item.Name] = priceFloat
 	}
 }
@@ -66,7 +66,7 @@ func (e *NotificationEmitter) EmitListing(listing *model.Listing) {
 	var listingMessage string
 	for _, sub := range subs {
 		// check if price exceeds the subscription config
-		if e.IsPriceMatch(listing.Price, sub) {
+		if e.IsPriceMatch(listing.Price.String(), sub) {
 			// notify user
 			if listingMessage == "" {
 				listingMessage = GetListingMessage(listing, e.itemPrices[listing.Name])

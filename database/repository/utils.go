@@ -1,10 +1,12 @@
 package repository
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"time"
 
+	"github.com/mikezzb/steam-trading-shared/database/model"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -50,4 +52,8 @@ func MapToBson(m map[string]interface{}) bson.M {
 		b[k] = v
 	}
 	return b
+}
+
+func GetTransactionKey(tran *model.Transaction) string {
+	return fmt.Sprintf("%s-%s", tran.Metadata.AssetId, tran.Metadata.Market)
 }

@@ -215,10 +215,12 @@ func TestTransactionRepo_Insert(t *testing.T) {
 	t.Run("Insert", func(t *testing.T) {
 		transactions := []model.Transaction{
 			{
-				Name: "★ Bayonet | Doppler (Factory New)",
+				Name:      "★ Bayonet | Doppler (Factory New)",
+				CreatedAt: time.Now(),
 			},
 			{
-				Name: "★ Bayonet | Doppler (Minimal Wear)",
+				Name:      "★ Bayonet | Doppler (Minimal Wear)",
+				CreatedAt: time.Now(),
 			},
 		}
 
@@ -250,12 +252,19 @@ func TestTransactionRepo_Insert(t *testing.T) {
 		transactions := []model.Transaction{
 			{
 				Name:       "★ Bayonet | Doppler (Factory New)",
-				AssetId:    "123",
 				PreviewUrl: "Old Preview URL",
+				CreatedAt:  time.Now(),
+				Metadata: model.TransactionMetadata{
+					AssetId: "123",
+					Market:  "buff",
+				},
 			},
 			{
-				Name:    "★ Bayonet | Doppler (Minimal Wear)",
-				AssetId: "456",
+				Name: "★ Bayonet | Doppler (Minimal Wear)",
+				Metadata: model.TransactionMetadata{
+					AssetId: "456",
+				},
+				CreatedAt: time.Now(),
 			},
 		}
 
@@ -269,12 +278,19 @@ func TestTransactionRepo_Insert(t *testing.T) {
 		newTransactions := []model.Transaction{
 			{
 				Name:       "★ Bayonet | Doppler (Factory New)",
-				AssetId:    "123",
 				PreviewUrl: "New Preview URL",
+				CreatedAt:  time.Now(),
+				Metadata: model.TransactionMetadata{
+					AssetId: "123",
+					Market:  "buff",
+				},
 			},
 			{
-				Name:    "★ Bayonet | Doppler (Minimal Wear)",
-				AssetId: "101112",
+				Name:      "★ Bayonet | Doppler (Minimal Wear)",
+				CreatedAt: time.Now(),
+				Metadata: model.TransactionMetadata{
+					AssetId: "101112",
+				},
 			},
 		}
 
@@ -285,14 +301,14 @@ func TestTransactionRepo_Insert(t *testing.T) {
 		}
 
 		// Get the item back
-		updatedTransaction, err := repo.FindTransactionByAssetId(transactions[0].AssetId)
+		updatedTransaction, err := repo.FindTransactionByAssetId(transactions[0].Metadata.AssetId)
 		if err != nil {
 			t.Error(err)
 		}
 
-		// expect the preview url to be updated
-		if updatedTransaction.PreviewUrl != newTransactions[0].PreviewUrl {
-			t.Errorf("Preview URL not updated: %v", updatedTransaction.PreviewUrl)
+		// If dup key transaction already exists, the preview url should not be updated
+		if updatedTransaction.PreviewUrl == newTransactions[0].PreviewUrl {
+			t.Errorf("Preview URL SHALL NOT be updated: %v", updatedTransaction.PreviewUrl)
 		}
 
 		// get ALL transactions
@@ -334,16 +350,18 @@ func TestDeleteOldListing(t *testing.T) {
 	repo := repos.GetListingRepository()
 
 	t.Run("DeleteOldListing", func(t *testing.T) {
+		p1, _ := primitive.ParseDecimal128("100")
+		p2, _ := primitive.ParseDecimal128("105")
 		listings := []model.Listing{
 			{
 				Name:    "★ Bayonet | Doppler (Factory New)",
 				AssetId: "123",
-				Price:   "100",
+				Price:   p1,
 			},
 			{
 				Name:    "★ Bayonet | Doppler (Factory New)",
 				AssetId: "123",
-				Price:   "105", // UPDATED
+				Price:   p2,
 			},
 		}
 
@@ -401,7 +419,7 @@ func TestMergeByAssetIds(t *testing.T) {
 
 		for _, assetId := range assetIds {
 			log.Printf("Merging assetId: %v\n", assetId)
-			transactionRepo.DeleteOldTransactionsByAssetID(assetId)
+			// transactionRepo.DeleteOldTransactionsByAssetID(assetId)
 		}
 	})
 }

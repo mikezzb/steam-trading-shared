@@ -1,10 +1,14 @@
 package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type MarketPrice struct {
-	Price     string `bson:"price" json:"price"`
-	UpdatedAt int64  `bson:"updatedAt" json:"updatedAt"`
+	Price     primitive.Decimal128 `bson:"price" json:"price"`
+	UpdatedAt time.Time            `bson:"updatedAt" json:"updatedAt"`
 }
 
 type Item struct {
@@ -23,21 +27,22 @@ type Item struct {
 type Listing struct {
 	ID primitive.ObjectID `bson:"_id,omitempty"`
 
-	Name             string `bson:"name"`
-	Market           string `bson:"market"`
-	Price            string `bson:"price"`
-	CreatedAt        int64  `bson:"createdAt"`
-	UpdatedAt        int64  `bson:"updatedAt"`
-	PreviewUrl       string `bson:"previewUrl"`
-	GoodsId          int    `bson:"goodsId"`
-	ClassId          string `bson:"classId"`
-	AssetId          string `bson:"assetId"`
-	TradableCooldown string `bson:"tradableCooldown"`
+	CreatedAt time.Time `bson:"createdAt"`
+	UpdatedAt time.Time `bson:"updatedAt"`
 
-	PaintWear  string `bson:"paintWear"`
-	PaintIndex int    `bson:"paintIndex"`
-	PaintSeed  int    `bson:"paintSeed"`
-	Rarity     string `bson:"rarity"`
+	Name             string               `bson:"name"`
+	Market           string               `bson:"market"`
+	Price            primitive.Decimal128 `bson:"price"`
+	PreviewUrl       string               `bson:"previewUrl"`
+	GoodsId          int                  `bson:"goodsId"`
+	ClassId          string               `bson:"classId"`
+	AssetId          string               `bson:"assetId"`
+	TradableCooldown string               `bson:"tradableCooldown"`
+
+	PaintWear  primitive.Decimal128 `bson:"paintWear"`
+	PaintIndex int                  `bson:"paintIndex"`
+	PaintSeed  int                  `bson:"paintSeed"`
+	Rarity     string               `bson:"rarity"`
 
 	// Market specific ID
 	InstanceId string `bson:"instanceId"`
@@ -73,26 +78,32 @@ type User struct {
 	FavListingIds   []primitive.ObjectID `bson:"favListingIds"`
 }
 
+type TransactionMetadata struct {
+	Market  string `bson:"market"`
+	AssetId string `bson:"assetId"`
+}
+
 // Currently same as Listing
 type Transaction struct {
-	ID primitive.ObjectID `bson:"_id,omitempty"`
+	ID       primitive.ObjectID  `bson:"_id,omitempty"`
+	Metadata TransactionMetadata `bson:"metadata"`
 
-	Name             string `bson:"name"`
-	Market           string `bson:"market"`
-	Price            string `bson:"price"`
-	CreatedAt        int64  `bson:"createdAt"`
-	UpdatedAt        int64  `bson:"updatedAt"`
-	PreviewUrl       string `bson:"previewUrl"`
-	GoodsId          int    `bson:"goodsId"`
-	ClassId          string `bson:"classId"`
-	AssetId          string `bson:"assetId"`
-	TradableCooldown string `bson:"tradableCooldown"`
+	Name string `bson:"name"`
 
-	PaintWear  string `bson:"paintWear"`
-	PaintIndex int    `bson:"paintIndex"`
-	PaintSeed  int    `bson:"paintSeed"`
-	Rarity     string `bson:"rarity"`
+	CreatedAt time.Time `bson:"createdAt"`
 
-	// Buff only
+	Price            primitive.Decimal128 `bson:"price"`
+	PreviewUrl       string               `bson:"previewUrl"`
+	GoodsId          int                  `bson:"goodsId"`
+	ClassId          string               `bson:"classId"`
+	TradableCooldown string               `bson:"tradableCooldown"`
+
+	PaintWear  primitive.Decimal128 `bson:"paintWear"`
+	PaintIndex int                  `bson:"paintIndex"`
+	PaintSeed  int                  `bson:"paintSeed"`
+
+	Rarity string `bson:"rarity"`
+
+	// market specific unique id
 	InstanceId string `bson:"instanceId"`
 }
