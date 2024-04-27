@@ -440,6 +440,7 @@ func TestSubscriptions(t *testing.T) {
 			MaxPremium: "5%",
 			NotiType:   "telegram",
 			NotiId:     "123",
+			OwnerId:    primitive.NewObjectID(),
 		}
 
 		_, err = repo.InsertSubscription(&subscriptions)
@@ -448,8 +449,14 @@ func TestSubscriptions(t *testing.T) {
 			t.Error(err)
 		}
 
+		// Get the item back
+		updatedSubscriptions, err := repo.GetAllByOwnerId(subscriptions.OwnerId)
+		if err != nil || len(updatedSubscriptions) == 0 {
+			t.Errorf("Failed to get subscription %v", err)
+		}
+
 		// delete the subscription by name
-		err = repo.DeleteSubscriptionByName(subscriptions.Name)
+		err = repo.DeleteSubscriptionByName(subscriptions.Name, subscriptions.OwnerId)
 		if err != nil {
 			t.Error(err)
 		}

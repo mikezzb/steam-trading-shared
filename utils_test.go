@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/mikezzb/steam-trading-shared/database/model"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func TestUtils_Naming(t *testing.T) {
@@ -102,8 +103,29 @@ func TestStringPrice(t *testing.T) {
 
 		for _, val := range testVals {
 			if MAX_DECIMAL128.String() < val {
-				t.Errorf("invalid price smaller than 0.01")
+				t.Errorf("invalid price smaller than MAX_DECIMAL128: %s", val)
 			}
 		}
 	})
+}
+
+func TestDecCompareTo(t *testing.T) {
+	testCases := []struct {
+		name     string
+		a, b     primitive.Decimal128
+		expected int
+	}{
+		{"a < b", primitive.NewDecimal128(123, 2), primitive.NewDecimal128(456, 2), -1},
+		{"a > b", primitive.NewDecimal128(789, 2), primitive.NewDecimal128(123, 2), 1},
+		{"a == b", primitive.NewDecimal128(123, 2), primitive.NewDecimal128(123, 2), 0},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := DecCompareTo(tc.a, tc.b)
+			if actual != tc.expected {
+				t.Errorf("Expected %d, but got %d", tc.expected, actual)
+			}
+		})
+	}
 }

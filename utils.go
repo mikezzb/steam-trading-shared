@@ -37,6 +37,11 @@ func FormatItemName(name, wear string, isStatTrak bool) (formattedName string) {
 	return
 }
 
+// Get the buff id of an item
+func GetItemId(name string) string {
+	return strconv.Itoa(GetBuffIds()[name])
+}
+
 // ExtractBaseItemName extracts the base item name from the formatted name
 func ExtractBaseItemName(name string) (baseName string) {
 	baseName = name
@@ -249,17 +254,41 @@ func UnixToTime(unix int64) time.Time {
 }
 
 // Compare two Decimal128, return -1 if a < b, 0 if a == b, 1 if a > b
-func DecCompareTo(a, b primitive.Decimal128) int {
-	aStr := a.String()
-	bStr := b.String()
-
-	if aStr == bStr {
+func DecCompareTo(d1, d2 primitive.Decimal128) int {
+	b1, exp1, err := d1.BigInt()
+	if err != nil {
 		return 0
 	}
-	if aStr < bStr {
-		return -1
+	b2, exp2, err := d2.BigInt()
+	if err != nil {
+		return 0
 	}
-	return 1
+
+	sign := b1.Sign()
+	if sign != b2.Sign() {
+		if b1.Sign() > 0 {
+			return 1
+		} else {
+			return -1
+		}
+	}
+
+	if exp1 == exp2 {
+		return b1.Cmp(b2)
+	}
+
+	if sign < 0 {
+		if exp1 < exp2 {
+			return 1
+		}
+		return -1
+	} else {
+		if exp1 < exp2 {
+			return -1
+		}
+
+		return 1
+	}
 }
 
 // Get a Decimal128 from a string, ignore error

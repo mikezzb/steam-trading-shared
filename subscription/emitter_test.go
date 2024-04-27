@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
+	shared "github.com/mikezzb/steam-trading-shared"
 	"github.com/mikezzb/steam-trading-shared/database"
 	"github.com/mikezzb/steam-trading-shared/database/model"
 	"github.com/mikezzb/steam-trading-shared/database/repository"
 	"github.com/mikezzb/steam-trading-shared/subscription"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func TestEmitter(t *testing.T) {
@@ -40,20 +40,18 @@ func TestEmitter(t *testing.T) {
 
 		// create item
 		itemRepo := repos.GetItemRepository()
-		p1, _ := primitive.ParseDecimal128("1000")
-		p2, _ := primitive.ParseDecimal128("100")
 		items := []*model.Item{
 			{
 				Name: "★ Bayonet | Marble Fade (Factory New)",
 				BuffPrice: model.MarketPrice{
-					Price:     p1,
+					Price:     shared.GetDecimal128("1000"),
 					UpdatedAt: time.Now(),
 				},
 			},
 			{
 				Name: "★ Flip Knife | Marble Fade (Factory New)",
 				BuffPrice: model.MarketPrice{
-					Price:     p2,
+					Price:     shared.GetDecimal128("100"),
 					UpdatedAt: time.Now(),
 				},
 			},
@@ -96,12 +94,10 @@ func TestEmitter(t *testing.T) {
 
 		emitter.Init(repos)
 
-		p1, _ = primitive.ParseDecimal128("1001")
-
 		emitter.EmitListing(&model.Listing{
 			Name:   "★ Bayonet | Marble Fade (Factory New)",
 			Rarity: "FFI",
-			Price:  p1,
+			Price:  shared.GetDecimal128("1001"),
 		})
 
 		time.Sleep(1 * time.Second)
