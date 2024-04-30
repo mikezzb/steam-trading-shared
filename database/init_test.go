@@ -96,12 +96,24 @@ func TestReformatTransactions(t *testing.T) {
 }
 
 func TestItemReformat(t *testing.T) {
-	dbClient, _ := database.NewDBClient(dbUri, "steam-trading", 10*time.Second)
+	dbClient, _ := database.NewDBClient(dbUri, "steam-trading-unit-test", 10*time.Second)
 	defer dbClient.Disconnect()
 	t.Run("ItemReformat", func(t *testing.T) {
 		err := dbClient.ReformatItems("items")
 		if err != nil {
 			t.Fatalf("Failed to convert item to decimal: %v", err)
+		}
+	})
+}
+
+func TestDedupListing(t *testing.T) {
+
+	dbClient, _ := database.NewDBClient(dbUri, "steam-trading", 10*time.Second)
+	defer dbClient.Disconnect()
+	t.Run("DedupListing", func(t *testing.T) {
+		err := dbClient.DedupListing("listings")
+		if err != nil {
+			t.Fatalf("Failed to dedup listing: %v", err)
 		}
 	})
 }

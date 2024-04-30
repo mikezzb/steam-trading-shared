@@ -273,3 +273,64 @@ func (c *DBClient) ReformatItems(collName string) error {
 	log.Println("Data reformatting completed.")
 	return nil
 }
+
+func (c *DBClient) DedupListing(collName string) error {
+	cursor, err := c.DB.Collection(collName).Find(context.Background(), bson.D{})
+	if err != nil {
+		return err
+	}
+	defer cursor.Close(context.Background())
+
+	for cursor.Next(context.Background()) {
+		var doc bson.M
+		if err := cursor.Decode(&doc); err != nil {
+			return err
+		}
+
+		// find by filter
+		filter := bson.M{
+			"assetId": doc["assetId"],
+			"market":  doc["market"],
+		}
+
+		// find all listings with the same asset ID and market, sorted by insertion time in descending order
+		opts := options.Find().SetSort(bson.D{{Key: "_id", Value: -1}})
+		cursor, err := c.DB.Collection(collName).Find(context.Background(), filter, opts)
+		if err != nil {
+			return err
+		}
+		defer cursor.Close(context.Background())
+
+		// keep the first one
+		var firstListingID primitive.ObjectID
+		if cursor.Next(context.Background()) {
+			var firstListing model.Listing
+			if err := cursor.Decode(&firstListing); err != nil {
+				return err
+			}
+			firstListingID = firstListing.ID
+		}
+
+		// delete all listings with the same asset ID and market except the first one
+		_, err = c.DB.Collection(collName).DeleteMany(context.Background(),
+			bson.M{
+				"assetId": doc["assetId"],
+				"market":  doc["market"],
+				"_id": bson.M{
+					"$ne": firstListingID,
+				},
+			},
+		)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	if err := cursor.Err(); err != nil {
+		return err
+	}
+
+	log.Println("Data deduplication completed.")
+	return nil
+}

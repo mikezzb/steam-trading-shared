@@ -35,17 +35,6 @@ func (r *ItemRepository) FindItemById(id string) (*model.Item, error) {
 	return &item, err
 }
 
-func sameItem(item1, item2 *model.Item) bool {
-	if item1 == nil || item2 == nil {
-		return false
-	}
-	return item1.Name == item2.Name &&
-		item1.BuffPrice.UpdatedAt == item2.BuffPrice.UpdatedAt &&
-		item1.IgxePrice.UpdatedAt == item2.IgxePrice.UpdatedAt &&
-		item1.UUPrice.UpdatedAt == item2.UUPrice.UpdatedAt &&
-		item1.SteamPrice.UpdatedAt == item2.SteamPrice.UpdatedAt
-}
-
 func (r *ItemRepository) DeleteItemByName(item *model.Item) error {
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
@@ -54,51 +43,6 @@ func (r *ItemRepository) DeleteItemByName(item *model.Item) error {
 		bson.M{"name": item.Name},
 	)
 	return err
-}
-
-func GetItemUpdateBson(oldItem, newItem *model.Item) interface{} {
-	if oldItem == nil {
-		return bson.M{
-			"$set": newItem,
-		}
-	}
-	// find dirty fields
-	item := GetBsonWithUpdatedAt()
-	if oldItem.Name != newItem.Name {
-		item["name"] = newItem.Name
-	}
-
-	if oldItem.Category != newItem.Category {
-		item["category"] = newItem.Category
-	}
-	if oldItem.Skin != newItem.Skin {
-		item["skin"] = newItem.Skin
-	}
-	if oldItem.Exterior != newItem.Exterior {
-		item["exterior"] = newItem.Exterior
-	}
-
-	if newItem.BuffPrice != nil && (oldItem.BuffPrice == nil || oldItem.BuffPrice.UpdatedAt != newItem.BuffPrice.UpdatedAt) {
-		item["buffPrice"] = newItem.BuffPrice
-	}
-
-	if newItem.IgxePrice != nil && (oldItem.IgxePrice == nil || oldItem.IgxePrice.UpdatedAt != newItem.IgxePrice.UpdatedAt) {
-		item["igxePrice"] = newItem.IgxePrice
-	}
-
-	if newItem.UUPrice != nil && (oldItem.UUPrice == nil || oldItem.UUPrice.UpdatedAt != newItem.UUPrice.UpdatedAt) {
-		item["uuPrice"] = newItem.UUPrice
-	}
-
-	if newItem.SteamPrice != nil && (oldItem.SteamPrice == nil || oldItem.SteamPrice.UpdatedAt != newItem.SteamPrice.UpdatedAt) {
-		item["steamPrice"] = newItem.SteamPrice
-	}
-
-	log.Printf("Update item: %v", item)
-
-	return bson.M{
-		"$set": item,
-	}
 }
 
 // Upsert item by id

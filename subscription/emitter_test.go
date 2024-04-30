@@ -43,14 +43,14 @@ func TestEmitter(t *testing.T) {
 		items := []*model.Item{
 			{
 				Name: "★ Bayonet | Marble Fade (Factory New)",
-				BuffPrice: model.MarketPrice{
+				BuffPrice: &model.MarketPrice{
 					Price:     shared.GetDecimal128("1000"),
 					UpdatedAt: time.Now(),
 				},
 			},
 			{
 				Name: "★ Flip Knife | Marble Fade (Factory New)",
-				BuffPrice: model.MarketPrice{
+				BuffPrice: &model.MarketPrice{
 					Price:     shared.GetDecimal128("100"),
 					UpdatedAt: time.Now(),
 				},
