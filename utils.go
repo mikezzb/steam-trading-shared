@@ -98,14 +98,6 @@ func GetListingUrl(listing *model.Listing) string {
 	}
 }
 
-// Shanghai timezone
-func GetTimestampNow() string {
-	loc, _ := time.LoadLocation("Asia/Shanghai")
-	currTime := time.Now().In(loc)
-	timestamp := currTime.UnixNano() / int64(time.Millisecond)
-	return strconv.FormatInt(timestamp, 10)
-}
-
 func GetUnixNow() int64 {
 	return time.Now().Unix()
 }
@@ -301,6 +293,19 @@ func DecCompareTo(d1, d2 primitive.Decimal128) int {
 
 		return 1
 	}
+}
+
+// Compare two numeric strings, return -1 if a < b, 0 if a == b, 1 if a > b
+func NumStrCmp(a, b string) int {
+	floatA, _ := strconv.ParseFloat(a, 64)
+	floatB, _ := strconv.ParseFloat(b, 64)
+
+	if floatA < floatB {
+		return -1
+	} else if floatA > floatB {
+		return 1
+	}
+	return 0
 }
 
 // Get a Decimal128 from a string, ignore error

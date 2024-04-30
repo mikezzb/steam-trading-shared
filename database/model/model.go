@@ -16,7 +16,11 @@ type MarketPrice struct {
 type Item struct {
 	ID string `bson:"_id,omitempty" json:"_id"`
 
-	Name    string `bson:"name" json:"name"`
+	Name     string `bson:"name" json:"name"`
+	Category string `bson:"category" json:"category"`
+	Skin     string `bson:"skin,omitempty" json:"skin"`
+	Exterior string `bson:"exterior,omitempty" json:"exterior"`
+
 	IconUrl string `bson:"iconUrl" json:"iconUrl"`
 
 	// Market prices

@@ -68,21 +68,23 @@ func GetItemUpdateBson(oldItem, newItem *model.Item) interface{} {
 		item["name"] = newItem.Name
 	}
 
-	if oldItem.BuffPrice.UpdatedAt != newItem.BuffPrice.UpdatedAt {
+	if newItem.BuffPrice != nil && (oldItem.BuffPrice == nil || oldItem.BuffPrice.UpdatedAt != newItem.BuffPrice.UpdatedAt) {
 		item["buffPrice"] = newItem.BuffPrice
 	}
 
-	if oldItem.IgxePrice.UpdatedAt != newItem.IgxePrice.UpdatedAt {
+	if newItem.IgxePrice != nil && (oldItem.IgxePrice == nil || oldItem.IgxePrice.UpdatedAt != newItem.IgxePrice.UpdatedAt) {
 		item["igxePrice"] = newItem.IgxePrice
 	}
 
-	if oldItem.UUPrice.UpdatedAt != newItem.UUPrice.UpdatedAt {
+	if newItem.UUPrice != nil && (oldItem.UUPrice == nil || oldItem.UUPrice.UpdatedAt != newItem.UUPrice.UpdatedAt) {
 		item["uuPrice"] = newItem.UUPrice
 	}
 
-	if oldItem.SteamPrice.UpdatedAt != newItem.SteamPrice.UpdatedAt {
+	if newItem.SteamPrice != nil && (oldItem.SteamPrice == nil || oldItem.SteamPrice.UpdatedAt != newItem.SteamPrice.UpdatedAt) {
 		item["steamPrice"] = newItem.SteamPrice
 	}
+
+	log.Printf("Update item: %v", item)
 
 	return bson.M{
 		"$set": item,

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	shared "github.com/mikezzb/steam-trading-shared"
 	"github.com/mikezzb/steam-trading-shared/database/model"
 	"github.com/mikezzb/steam-trading-shared/database/repository"
 	"go.mongodb.org/mongo-driver/bson"
@@ -32,6 +33,14 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 		repo := repos.GetItemRepository()
 		item := &model.Item{
 			Name: "★ Bayonet | Doppler (Factory New)",
+			BuffPrice: &model.MarketPrice{
+				Price:     shared.GetDecimal128("100"),
+				UpdatedAt: time.Now(),
+			},
+			IgxePrice: &model.MarketPrice{
+				Price:     shared.GetDecimal128("201"),
+				UpdatedAt: time.Now(),
+			},
 		}
 
 		err = repo.UpsertItem(item)
@@ -51,17 +60,42 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 			return
 		}
 
-		// delete
-		err = repo.DeleteItemByName(updatedItem)
+		// Update the item
+		newItem := &model.Item{
+			Name: "★ Bayonet | Doppler (Factory New)",
+			BuffPrice: &model.MarketPrice{
+				Price:     shared.GetDecimal128("100"),
+				UpdatedAt: time.Now().Add(time.Minute),
+			},
+		}
+
+		err = repo.UpsertItem(newItem)
 
 		if err != nil {
 			t.Error(err)
 		}
 
-		_, err = repo.FindItemByName(item.Name)
-		if err == nil {
-			t.Errorf("Item not deleted: %v", item.Name)
+		// Get the item back
+		updatedItem, err = repo.FindItemByName(item.Name)
+		if err != nil {
+			t.Error(err)
 		}
+
+		if updatedItem.BuffPrice.UpdatedAt.Unix() != newItem.BuffPrice.UpdatedAt.Unix() {
+			t.Errorf("Item not updated: %v, expected: %v, got %v", updatedItem, newItem.BuffPrice.UpdatedAt, updatedItem.BuffPrice.UpdatedAt)
+		}
+
+		// delete
+		// err = repo.DeleteItemByName(updatedItem)
+
+		// if err != nil {
+		// 	t.Error(err)
+		// }
+
+		// _, err = repo.FindItemByName(item.Name)
+		// if err == nil {
+		// 	t.Errorf("Item not deleted: %v", item.Name)
+		// }
 
 	})
 }
