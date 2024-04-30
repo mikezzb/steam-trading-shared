@@ -31,8 +31,12 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 		}
 
 		repo := repos.GetItemRepository()
+		itemName := "★ Bayonet | Doppler (Factory New)"
+		itemId := shared.GetItemId(itemName)
 		item := &model.Item{
-			Name: "★ Bayonet | Doppler (Factory New)",
+			ID:       itemId,
+			Name:     itemName,
+			Exterior: "Factory New",
 			BuffPrice: &model.MarketPrice{
 				Price:     shared.GetDecimal128("100"),
 				UpdatedAt: time.Now(),
@@ -62,15 +66,21 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 
 		// Update the item
 		newItem := &model.Item{
-			Name: "★ Bayonet | Doppler (Factory New)",
+			ID:       itemId,
+			Name:     itemName,
+			Skin:     "Doppler",
+			Exterior: "Not Factory New",
 			BuffPrice: &model.MarketPrice{
 				Price:     shared.GetDecimal128("100"),
 				UpdatedAt: time.Now().Add(time.Minute),
 			},
+			SteamPrice: &model.MarketPrice{
+				Price:     shared.GetDecimal128("200"),
+				UpdatedAt: time.Now(),
+			},
 		}
 
 		err = repo.UpsertItem(newItem)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -81,22 +91,41 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 			t.Error(err)
 		}
 
-		if updatedItem.BuffPrice.UpdatedAt.Unix() != newItem.BuffPrice.UpdatedAt.Unix() {
-			t.Errorf("Item not updated: %v, expected: %v, got %v", updatedItem, newItem.BuffPrice.UpdatedAt, updatedItem.BuffPrice.UpdatedAt)
+		// test if same item will trigger update
+		err = repo.UpsertItem(updatedItem)
+		if err != nil {
+			t.Error(err)
+		}
+
+		log.Printf("Updated item: %v", updatedItem)
+
+		if !shared.SameTime(updatedItem.BuffPrice.UpdatedAt, newItem.BuffPrice.UpdatedAt) {
+			t.Errorf("Item not updated: expected: %v, got %v", newItem.BuffPrice.UpdatedAt, updatedItem.BuffPrice.UpdatedAt)
+		}
+
+		if updatedItem.Skin != newItem.Skin {
+			t.Errorf("Item not updated: expected: %v, got %v", newItem.Skin, updatedItem.Skin)
+		}
+
+		if updatedItem.Exterior != newItem.Exterior {
+			t.Errorf("Item not updated: expected: %v, got %v", newItem.Exterior, updatedItem.Exterior)
+		}
+
+		if !shared.SameTime(updatedItem.SteamPrice.UpdatedAt, newItem.SteamPrice.UpdatedAt) {
+			t.Errorf("Item not updated: expected: %v, got %v", newItem.SteamPrice.UpdatedAt, updatedItem.SteamPrice.UpdatedAt)
 		}
 
 		// delete
-		// err = repo.DeleteItemByName(updatedItem)
+		err = repo.DeleteItemByName(updatedItem)
 
-		// if err != nil {
-		// 	t.Error(err)
-		// }
+		if err != nil {
+			t.Error(err)
+		}
 
-		// _, err = repo.FindItemByName(item.Name)
-		// if err == nil {
-		// 	t.Errorf("Item not deleted: %v", item.Name)
-		// }
-
+		_, err = repo.FindItemByName(item.Name)
+		if err == nil {
+			t.Errorf("Item not deleted: %v", item.Name)
+		}
 	})
 }
 

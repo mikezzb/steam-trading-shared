@@ -2,7 +2,6 @@ package shared
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -69,8 +68,6 @@ func init() {
 func loadJSON(path string, data interface{}) error {
 	// construct absolute file path
 	filePath := filepath.Join(sharedBasePath, path)
-
-	log.Printf("loading json file: %s", filePath)
 
 	// load json file
 	jsonData, err := os.ReadFile(filePath)

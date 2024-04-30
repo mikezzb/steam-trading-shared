@@ -316,3 +316,11 @@ func GetDecimal128(s string) primitive.Decimal128 {
 	}
 	return d128
 }
+
+func GetNowHHMMSS() string {
+	return time.Now().Format("2006-01-02T15:04:05")
+}
+
+func SameTime(t1, t2 time.Time) bool {
+	return t1.Unix() == t2.Unix()
+}

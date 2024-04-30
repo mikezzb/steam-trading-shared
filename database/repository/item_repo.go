@@ -68,6 +68,16 @@ func GetItemUpdateBson(oldItem, newItem *model.Item) interface{} {
 		item["name"] = newItem.Name
 	}
 
+	if oldItem.Category != newItem.Category {
+		item["category"] = newItem.Category
+	}
+	if oldItem.Skin != newItem.Skin {
+		item["skin"] = newItem.Skin
+	}
+	if oldItem.Exterior != newItem.Exterior {
+		item["exterior"] = newItem.Exterior
+	}
+
 	if newItem.BuffPrice != nil && (oldItem.BuffPrice == nil || oldItem.BuffPrice.UpdatedAt != newItem.BuffPrice.UpdatedAt) {
 		item["buffPrice"] = newItem.BuffPrice
 	}
@@ -93,29 +103,27 @@ func GetItemUpdateBson(oldItem, newItem *model.Item) interface{} {
 
 // Upsert item by id
 func (r *ItemRepository) UpsertItem(item *model.Item) error {
-	// clone item for modification
-	item = &model.Item{
-		ID:         item.ID,
-		Name:       item.Name,
-		SteamPrice: item.SteamPrice,
-		BuffPrice:  item.BuffPrice,
-		IgxePrice:  item.IgxePrice,
-		UUPrice:    item.UUPrice,
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
 
 	// find existing item by name
 	oldItem, _ := r.FindItemById(item.ID)
-	// upsert if has delta
-	if !sameItem(oldItem, item) {
-		opt := options.Update().SetUpsert(true)
-		update := GetItemUpdateBson(oldItem, item)
-
-		_, err := r.ItemCol.UpdateOne(ctx, bson.M{"_id": item.ID}, update, opt)
+	// get upsert bson
+	itemDelta, err := GetUpsertBson(oldItem, item)
+	if err != nil {
 		return err
 	}
-	return nil
+	AddUpdatedAtToBson(itemDelta)
+	// if no change, return (but it shall not happen cuz the updatedAt field is always updated)
+	if len(itemDelta) == 0 {
+		return nil
+	}
+	update := bson.M{"$set": itemDelta}
+
+	opt := options.Update().SetUpsert(true)
+
+	_, err = r.ItemCol.UpdateOne(ctx, bson.M{"_id": item.ID}, update, opt)
+	return err
 }
 
 func (r *ItemRepository) GetAll() ([]model.Item, error) {
