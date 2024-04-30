@@ -59,6 +59,11 @@ func (js *JsonKvStore) Set(key string, value interface{}) {
 	js.values[key] = value
 }
 
+func (js *JsonKvStore) SetAndSave(key string, value interface{}) error {
+	js.Set(key, value)
+	return js.Save()
+}
+
 func (js *JsonKvStore) Save() error {
 	js.mutex.Lock()
 	defer js.mutex.Unlock()

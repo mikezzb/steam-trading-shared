@@ -58,7 +58,7 @@ func TestEmitter(t *testing.T) {
 		}
 
 		for _, item := range items {
-			itemRepo.UpdateItem(item)
+			itemRepo.UpsertItem(item)
 		}
 
 		// create subs

@@ -8,6 +8,7 @@ import (
 
 	"github.com/mikezzb/steam-trading-shared/database/model"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func GenerateUpdateBson(oldValue, newValue interface{}) bson.M {
@@ -48,6 +49,10 @@ func GetTimestampNow() string {
 
 func MapToBson(m map[string]interface{}) bson.M {
 	b := bson.M{}
+	if m == nil {
+		return b
+	}
+
 	for k, v := range m {
 		b[k] = v
 	}
@@ -57,3 +62,10 @@ func MapToBson(m map[string]interface{}) bson.M {
 func GetTransactionKey(tran *model.Transaction) string {
 	return fmt.Sprintf("%s-%s", tran.Metadata.AssetId, tran.Metadata.Market)
 }
+
+// Page starts from 1
+func GetPageOpts(page, pageSize int) *options.FindOptions {
+	return options.Find().SetSkip(int64((page - 1) * pageSize)).SetLimit(int64(pageSize))
+}
+
+var ErrDuplicate = fmt.Errorf("duplicate key error")

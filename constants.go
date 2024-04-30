@@ -36,11 +36,7 @@ const (
 	SECRET_TELEGRAM_TOKEN = "telegramToken"
 )
 
-const (
-	MAX_SAFE_STR = "999999999999"
-)
-
-var MAX_DECIMAL128, _ = primitive.ParseDecimal128("9999999999999999")
+var MAX_DECIMAL128, _ = primitive.ParseDecimal128("99999999")
 
 // configs
 const (

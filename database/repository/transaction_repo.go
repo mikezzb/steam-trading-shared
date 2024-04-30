@@ -33,6 +33,21 @@ func (r *TransactionRepository) FindTransactionByAssetId(assetId string) (*model
 	return &transaction, err
 }
 
+func (r *TransactionRepository) FindTransactionsByPage(page, pageSize int, filter bson.M) ([]model.Transaction, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	opts := GetPageOpts(page, pageSize)
+	cursor, err := r.TransactionCol.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	var transactions []model.Transaction
+	err = cursor.All(ctx, &transactions)
+	return transactions, err
+}
+
 func (r *TransactionRepository) InsertTransactions(transactions []model.Transaction) error {
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
@@ -42,6 +57,13 @@ func (r *TransactionRepository) InsertTransactions(transactions []model.Transact
 	}
 	_, err := r.TransactionCol.InsertMany(ctx, documents, options.InsertMany())
 	return err
+}
+
+func (r *TransactionRepository) Count() (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	return r.TransactionCol.CountDocuments(ctx, bson.M{})
 }
 
 func (r *TransactionRepository) UpsertTransactionsByAssetID(transactions []model.Transaction) error {

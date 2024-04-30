@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"log"
+	"time"
 
 	"github.com/mikezzb/steam-trading-shared/database/model"
 
@@ -24,12 +26,20 @@ func (r *ItemRepository) FindItemByName(name string) (*model.Item, error) {
 	return &item, err
 }
 
+func (r *ItemRepository) FindItemById(id string) (*model.Item, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	var item model.Item
+	err := r.ItemCol.FindOne(ctx, bson.M{"_id": id}).Decode(&item)
+	return &item, err
+}
+
 func sameItem(item1, item2 *model.Item) bool {
 	if item1 == nil || item2 == nil {
 		return false
 	}
 	return item1.Name == item2.Name &&
-		item1.IconUrl == item2.IconUrl &&
 		item1.BuffPrice.UpdatedAt == item2.BuffPrice.UpdatedAt &&
 		item1.IgxePrice.UpdatedAt == item2.IgxePrice.UpdatedAt &&
 		item1.UUPrice.UpdatedAt == item2.UUPrice.UpdatedAt &&
@@ -57,9 +67,6 @@ func GetItemUpdateBson(oldItem, newItem *model.Item) interface{} {
 	if oldItem.Name != newItem.Name {
 		item["name"] = newItem.Name
 	}
-	if oldItem.IconUrl != newItem.IconUrl {
-		item["iconUrl"] = newItem.IconUrl
-	}
 
 	if oldItem.BuffPrice.UpdatedAt != newItem.BuffPrice.UpdatedAt {
 		item["buffPrice"] = newItem.BuffPrice
@@ -82,11 +89,12 @@ func GetItemUpdateBson(oldItem, newItem *model.Item) interface{} {
 	}
 }
 
-func (r *ItemRepository) UpdateItem(item *model.Item) error {
+// Upsert item by id
+func (r *ItemRepository) UpsertItem(item *model.Item) error {
 	// clone item for modification
 	item = &model.Item{
+		ID:         item.ID,
 		Name:       item.Name,
-		IconUrl:    item.IconUrl,
 		SteamPrice: item.SteamPrice,
 		BuffPrice:  item.BuffPrice,
 		IgxePrice:  item.IgxePrice,
@@ -96,13 +104,13 @@ func (r *ItemRepository) UpdateItem(item *model.Item) error {
 	defer cancel()
 
 	// find existing item by name
-	oldItem, _ := r.FindItemByName(item.Name)
+	oldItem, _ := r.FindItemById(item.ID)
 	// upsert if has delta
 	if !sameItem(oldItem, item) {
 		opt := options.Update().SetUpsert(true)
 		update := GetItemUpdateBson(oldItem, item)
 
-		_, err := r.ItemCol.UpdateOne(ctx, bson.M{"name": item.Name}, update, opt)
+		_, err := r.ItemCol.UpdateOne(ctx, bson.M{"_id": item.ID}, update, opt)
 		return err
 	}
 	return nil
@@ -123,12 +131,15 @@ func (r *ItemRepository) GetAll() ([]model.Item, error) {
 }
 
 func (r *ItemRepository) GetItemsByPage(page, size int, filters map[string]interface{}) ([]model.Item, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	log.Printf("timeout: %v", 1*time.Second)
 	defer cancel()
 
 	filtersBson := MapToBson(filters)
 
-	opts := options.Find().SetSkip(int64(page * size)).SetLimit(int64(size))
+	opts := GetPageOpts(page, size)
+
+	log.Printf("Executing MongoDB Find with filters: %v and opts: %v", filtersBson, opts)
 
 	cursor, err := r.ItemCol.Find(ctx, filtersBson, opts)
 	if err != nil {

@@ -34,7 +34,7 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 			Name: "★ Bayonet | Doppler (Factory New)",
 		}
 
-		err = repo.UpdateItem(item)
+		err = repo.UpsertItem(item)
 
 		if err != nil {
 			t.Error(err)
