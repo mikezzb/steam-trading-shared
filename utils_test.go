@@ -25,6 +25,70 @@ func TestUtils_Naming(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("Name decode", func(t *testing.T) {
+
+		tests := []struct {
+			name         string
+			input        string
+			wantName     string
+			wantSkin     string
+			wantExterior string
+		}{
+			{
+				name:         "Standard item decode",
+				input:        "AK-47 | Redline (Field-Tested)",
+				wantName:     "AK-47",
+				wantSkin:     "Redline",
+				wantExterior: "Field-Tested",
+			},
+			{
+				name:         "Item with no skin and exterior",
+				input:        "Glock-18",
+				wantName:     "Glock-18",
+				wantSkin:     "",
+				wantExterior: "",
+			},
+			{
+				name:         "Item with unusual characters",
+				input:        "M4A1-S | Chantico's Fire (Well-Worn)",
+				wantName:     "M4A1-S",
+				wantSkin:     "Chantico's Fire",
+				wantExterior: "Well-Worn",
+			},
+			{
+				name:         "Knife",
+				input:        "★ Bayonet | Doppler (Factory New)",
+				wantName:     "★ Bayonet",
+				wantSkin:     "Doppler",
+				wantExterior: "Factory New",
+			},
+			{
+				name:         "Incorrect format missing pipe",
+				input:        "USP-S Orion (Factory New)",
+				wantName:     "USP-S Orion (Factory New)",
+				wantSkin:     "",
+				wantExterior: "",
+			},
+			{
+				name:         "Empty string input",
+				input:        "",
+				wantName:     "",
+				wantSkin:     "",
+				wantExterior: "",
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				gotName, gotSkin, gotExterior := DecodeItemFullName(tt.input)
+				if gotName != tt.wantName || gotSkin != tt.wantSkin || gotExterior != tt.wantExterior {
+					t.Errorf("DecodeItemFullName(%q) = %q, %q, %q; want %q, %q, %q",
+						tt.input, gotName, gotSkin, gotExterior, tt.wantName, tt.wantSkin, tt.wantExterior)
+				}
+			})
+		}
+	})
 }
 
 func TestUtils_Tier(t *testing.T) {

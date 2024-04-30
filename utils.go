@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -40,6 +41,17 @@ func FormatItemName(name, wear string, isStatTrak bool) (formattedName string) {
 // Get the buff id of an item
 func GetItemId(name string) string {
 	return strconv.Itoa(GetBuffIds()[name])
+}
+
+func DecodeItemFullName(fullName string) (category, skin, exterior string) {
+	re := regexp.MustCompile(`(.*?) \| (.*?) \((.*?)\)`)
+	matches := re.FindStringSubmatch(fullName)
+
+	if matches == nil {
+		return fullName, "", ""
+	}
+
+	return matches[1], matches[2], matches[3]
 }
 
 // ExtractBaseItemName extracts the base item name from the formatted name
@@ -146,13 +158,13 @@ func RandomSleep(min, max int) {
 func GetMarketPrice(item *model.Item, marketName string) *model.MarketPrice {
 	switch marketName {
 	case MARKET_NAME_BUFF:
-		return &item.BuffPrice
+		return item.BuffPrice
 	case MARKET_NAME_STEAM:
-		return &item.SteamPrice
+		return item.SteamPrice
 	case MARKET_NAME_IGXE:
-		return &item.IgxePrice
+		return item.IgxePrice
 	case MARKET_NAME_UU:
-		return &item.UUPrice
+		return item.UUPrice
 	}
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	shared "github.com/mikezzb/steam-trading-shared"
 	"github.com/mikezzb/steam-trading-shared/database/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -222,6 +223,42 @@ func (c *DBClient) ReformatTransactionCollection(collName string) error {
 		doc["metadata"] = matadata
 
 		log.Printf("Reformatted document: %v", doc)
+
+		// update the document
+		if _, err := c.DB.Collection(collName).ReplaceOne(context.Background(), bson.M{"_id": doc["_id"]}, doc); err != nil {
+			return err
+		}
+	}
+
+	if err := cursor.Err(); err != nil {
+		return err
+	}
+
+	log.Println("Data reformatting completed.")
+	return nil
+}
+
+func (c *DBClient) ReformatItems(collName string) error {
+	cursor, err := c.DB.Collection(collName).Find(context.Background(), bson.D{})
+	if err != nil {
+		return err
+	}
+	defer cursor.Close(context.Background())
+
+	for cursor.Next(context.Background()) {
+		var doc bson.M
+		if err := cursor.Decode(&doc); err != nil {
+			return err
+		}
+
+		// augment the name
+		category, skin, exterior := shared.DecodeItemFullName(doc["name"].(string))
+
+		doc["category"] = category
+		doc["skin"] = skin
+		doc["exterior"] = exterior
+
+		log.Printf("Category: %v, Skin: %v, Exterior: %v", category, skin, exterior)
 
 		// update the document
 		if _, err := c.DB.Collection(collName).ReplaceOne(context.Background(), bson.M{"_id": doc["_id"]}, doc); err != nil {

@@ -20,10 +20,10 @@ type Item struct {
 	IconUrl string `bson:"iconUrl" json:"iconUrl"`
 
 	// Market prices
-	BuffPrice  MarketPrice `bson:"buffPrice" json:"buffPrice"`
-	UUPrice    MarketPrice `bson:"uuPrice" json:"uuPrice"`
-	IgxePrice  MarketPrice `bson:"igxePrice" json:"igxePrice"`
-	SteamPrice MarketPrice `bson:"steamPrice" json:"steamPrice"`
+	BuffPrice  *MarketPrice `bson:"buffPrice,omitempty" json:"buffPrice"`
+	UUPrice    *MarketPrice `bson:"uuPrice,omitempty" json:"uuPrice"`
+	IgxePrice  *MarketPrice `bson:"igxePrice,omitempty" json:"igxePrice"`
+	SteamPrice *MarketPrice `bson:"steamPrice,omitempty" json:"steamPrice"`
 }
 
 type Listing struct {
