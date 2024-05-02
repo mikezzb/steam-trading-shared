@@ -15,15 +15,18 @@ type NotificationEmitter struct {
 
 	// item name + rarity -> subscription key -> subscription (facilates delete & update operations)
 	itemRaritySubs map[string]map[string]*ParsedSubscription
+	// item name + paint seed -> subscription key -> subscription
+	itemPaintSeedSubs map[string]map[string]*ParsedSubscription
 	// item name -> min price of item
 	itemPrices map[string]float64
 }
 
 func NewNotificationEmitter(config *NotifierConfig) *NotificationEmitter {
 	emitter := &NotificationEmitter{
-		notifer:        NewNotifier(config),
-		itemRaritySubs: make(map[string]map[string]*ParsedSubscription),
-		itemPrices:     make(map[string]float64),
+		notifer:           NewNotifier(config),
+		itemRaritySubs:    make(map[string]map[string]*ParsedSubscription),
+		itemPaintSeedSubs: make(map[string]map[string]*ParsedSubscription),
+		itemPrices:        make(map[string]float64),
 	}
 	return emitter
 }
@@ -74,6 +77,18 @@ func (e *NotificationEmitter) EmitListing(listing *model.Listing) {
 			e.notifer.Notify(sub.Subscription.NotiType, sub.Subscription.NotiId, listingMessage)
 		}
 	}
+
+	// find all subscriptions for this item & paint seed
+	key = getItemPaintSeedKey(listing.Name, listing.PaintSeed)
+	subs = e.itemPaintSeedSubs[key]
+	for _, sub := range subs {
+		if e.IsPriceMatch(listing.Price.String(), sub) {
+			if listingMessage == "" {
+				listingMessage = GetListingMessage(listing, e.itemPrices[listing.Name])
+			}
+			e.notifer.Notify(sub.Subscription.NotiType, sub.Subscription.NotiId, listingMessage)
+		}
+	}
 }
 
 func (e *NotificationEmitter) EmitListings(listings []model.Listing) {
@@ -86,14 +101,46 @@ func (e *NotificationEmitter) EmitListings(listings []model.Listing) {
 // when I create a parsed sub, the sub pointer is from the & of a range result, which got overwritten, so the pointer points to the same sub always
 
 func (e *NotificationEmitter) addSub(sub *model.Subscription) {
-	key := getItemRarityKey(sub.Name, sub.Rarity)
 	subKey := GetSubKey(sub)
-
-	// add sub to the map
-	if _, ok := e.itemRaritySubs[key]; !ok {
-		e.itemRaritySubs[key] = make(map[string]*ParsedSubscription)
+	parsedSub := GetParsedSubscription(sub)
+	// add rarities
+	for _, rarity := range sub.Rarities {
+		key := getItemRarityKey(sub.Name, rarity)
+		// if no sub on this item rarity yet, create a map
+		if _, ok := e.itemRaritySubs[key]; !ok {
+			e.itemRaritySubs[key] = make(map[string]*ParsedSubscription)
+		}
+		// add sub to the maps
+		e.itemRaritySubs[key][subKey] = parsedSub
 	}
-	e.itemRaritySubs[key][subKey] = GetParsedSubscription(sub)
+	// add paint seeds
+	for _, paintSeed := range sub.PaintSeeds {
+		key := getItemPaintSeedKey(sub.Name, paintSeed)
+		// if no sub on this item rarity yet, create a map
+		if _, ok := e.itemPaintSeedSubs[key]; !ok {
+			e.itemPaintSeedSubs[key] = make(map[string]*ParsedSubscription)
+		}
+		// add sub to the maps
+		e.itemPaintSeedSubs[key][subKey] = parsedSub
+	}
+}
+
+func (e *NotificationEmitter) DelSub(sub *model.Subscription) {
+	for _, rarity := range sub.Rarities {
+		key := getItemRarityKey(sub.Name, rarity)
+		subKey := GetSubKey(sub)
+		delete(e.itemRaritySubs[key], subKey)
+	}
+	for _, paintSeed := range sub.PaintSeeds {
+		key := getItemPaintSeedKey(sub.Name, paintSeed)
+		subKey := GetSubKey(sub)
+		delete(e.itemPaintSeedSubs[key], subKey)
+	}
+}
+
+func (e *NotificationEmitter) UpdateSub(sub *model.Subscription) {
+	e.DelSub(sub)
+	e.addSub(sub)
 }
 
 func (e *NotificationEmitter) SubChangeStreamHandler(data interface{}, operationType string) {
@@ -103,15 +150,9 @@ func (e *NotificationEmitter) SubChangeStreamHandler(data interface{}, operation
 	case "insert":
 		e.addSub(sub)
 	case "delete":
-		// find the sub by key
-		key := getItemRarityKey(sub.Name, sub.Rarity)
-		subKey := GetSubKey(sub)
-		delete(e.itemRaritySubs[key], subKey)
+		e.DelSub(sub)
 	case "update":
-		// find the sub by key
-		key := getItemRarityKey(sub.Name, sub.Rarity)
-		subKey := GetSubKey(sub)
-		e.itemRaritySubs[key][subKey] = GetParsedSubscription(sub)
+		e.UpdateSub(sub)
 	default:
 		log.Fatalf("NotificationEmitter.EmitSub: invalid operation type")
 	}

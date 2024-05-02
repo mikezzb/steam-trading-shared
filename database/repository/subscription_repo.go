@@ -23,6 +23,8 @@ func (r *SubscriptionRepository) InsertSubscription(subscription *model.Subscrip
 		return primitive.NilObjectID, err
 	}
 
+	// TODO: need update the subscription id to user
+
 	if r.ChangeStreamCallback != nil {
 		r.ChangeStreamCallback(subscription, "insert")
 	}

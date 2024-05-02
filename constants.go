@@ -50,6 +50,8 @@ var WEAR_LEVELS = []string{"Factory New", "Minimal Wear", "Field-Tested", "Well-
 
 var ITEM_MARKET_NAMES = []string{MARKET_NAME_BUFF, MARKET_NAME_STEAM, MARKET_NAME_UU, MARKET_NAME_IGXE}
 
+var ITEM_FIXED_VAL_FILTER_KEYS = []string{"name", "category", "skin", "exterior"}
+
 var buffIds = map[string]int{}
 var igxeIds = map[string]int{}
 var rarePatternMap = RarePatternMap{}

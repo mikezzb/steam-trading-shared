@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	shared "github.com/mikezzb/steam-trading-shared"
 	"github.com/mikezzb/steam-trading-shared/database/model"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -127,4 +128,23 @@ func (r *ItemRepository) DeleteAll() error {
 
 	_, err := r.ItemCol.DeleteMany(ctx, bson.M{})
 	return err
+}
+
+// TODO: cache this in another collection using trigger
+func (r *ItemRepository) GetItemFilters() (map[string][]interface{}, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	// From all items, get all unique values of selected fields
+	selectedFields := shared.ITEM_FIXED_VAL_FILTER_KEYS
+	filters := make(map[string][]interface{})
+	for _, field := range selectedFields {
+		values, err := r.ItemCol.Distinct(ctx, field, bson.M{})
+		if err != nil {
+			return nil, err
+		}
+		filters[field] = values
+	}
+
+	return filters, nil
 }

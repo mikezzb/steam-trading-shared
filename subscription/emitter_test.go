@@ -67,14 +67,16 @@ func TestEmitter(t *testing.T) {
 			{
 				Name:       "★ Bayonet | Marble Fade (Factory New)",
 				MaxPremium: "1.0",
-				Rarity:     "FFI",
+				Rarities:   []string{"FFI", "Tricolor"},
+				PaintSeeds: []int{231},
 				NotiType:   "telegram",
 				NotiId:     secrets["telegramTestChatId"],
 			},
 			{
 				Name:       "★ Flip Knife | Marble Fade (Factory New)",
 				MaxPremium: "1.0",
-				Rarity:     "FFI",
+				Rarities:   []string{"FFI"},
+				PaintSeeds: []int{231},
 				NotiType:   "telegram",
 				NotiId:     secrets["telegramTestChatId"],
 			},
@@ -98,6 +100,14 @@ func TestEmitter(t *testing.T) {
 			Name:   "★ Bayonet | Marble Fade (Factory New)",
 			Rarity: "FFI",
 			Price:  shared.GetDecimal128("1001"),
+		})
+
+		time.Sleep(1 * time.Second)
+
+		emitter.EmitListing(&model.Listing{
+			Name:      "★ Bayonet | Marble Fade (Factory New)",
+			PaintSeed: 231,
+			Price:     shared.GetDecimal128("1000.6"),
 		})
 
 		time.Sleep(1 * time.Second)

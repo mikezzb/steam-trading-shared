@@ -63,9 +63,10 @@ type Subscription struct {
 	Name string `bson:"name" json:"name"`
 
 	// Optional, if not provided, it means subscribe to all rarity
-	Rarity string `bson:"rarity" json:"rarity"`
+	Rarities   []string `bson:"rarities,omitempty" json:"rarities"`
+	PaintSeeds []int    `bson:"paintSeeds,omitempty" json:"paintSeeds"`
 	// Optional, can be percentage or absolute value
-	MaxPremium string `bson:"maxPremium" json:"maxPremium"`
+	MaxPremium string `bson:"maxPremium,omitempty" json:"maxPremium"`
 
 	// Alarm settings. Example: Telegram, Email
 	NotiType string `bson:"notiType" json:"notiType"`

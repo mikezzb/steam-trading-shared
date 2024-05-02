@@ -499,7 +499,8 @@ func TestSubscriptions(t *testing.T) {
 	t.Run("Subscriptions", func(t *testing.T) {
 		subscriptions := model.Subscription{
 			Name:       "★ Bayonet | Marble Fade (Factory New)",
-			Rarity:     "FFI",
+			Rarities:   []string{"FFI", "Tricolor"},
+			PaintSeeds: []int{952},
 			MaxPremium: "5%",
 			NotiType:   "telegram",
 			NotiId:     "123",
