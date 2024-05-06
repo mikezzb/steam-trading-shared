@@ -3,7 +3,9 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log"
 
+	shared "github.com/mikezzb/steam-trading-shared"
 	"github.com/mikezzb/steam-trading-shared/database/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -13,6 +15,38 @@ import (
 type TransactionRepository struct {
 	TransactionCol       *mongo.Collection
 	ChangeStreamCallback ChangeStreamCallback
+}
+
+func (r *TransactionRepository) FindItemByDays(days int, filters bson.M) ([]model.Transaction, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	// add the days filter
+	if filters == nil {
+		filters = bson.M{}
+	}
+
+	log.Printf("FindItemByDays: %v, %v", days, filters)
+
+	filters["createdAt"] = bson.M{
+		"$gte": shared.GetTimeBeforeDays(days),
+	}
+
+	opts := options.Find().SetSort(bson.M{"createdAt": -1})
+
+	cursor, err := r.TransactionCol.Find(ctx, filters, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	defer cursor.Close(ctx)
+
+	var transactions []model.Transaction
+	if err = cursor.All(ctx, &transactions); err != nil {
+		return nil, err
+	}
+
+	return transactions, nil
 }
 
 func (r *TransactionRepository) FindTransactionByItemName(name string) (*model.Transaction, error) {
@@ -38,10 +72,13 @@ func (r *TransactionRepository) FindTransactionsByPage(page, pageSize int, filte
 	defer cancel()
 
 	opts := GetPageOpts(page, pageSize)
+	// sort by createdAt desc
+	opts.SetSort(bson.M{"createdAt": -1})
 	cursor, err := r.TransactionCol.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
+	defer cursor.Close(ctx)
 
 	var transactions []model.Transaction
 	err = cursor.All(ctx, &transactions)
@@ -59,11 +96,11 @@ func (r *TransactionRepository) InsertTransactions(transactions []model.Transact
 	return err
 }
 
-func (r *TransactionRepository) Count() (int64, error) {
+func (r *TransactionRepository) Count(filters bson.M) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
 
-	return r.TransactionCol.CountDocuments(ctx, bson.M{})
+	return r.TransactionCol.CountDocuments(ctx, filters)
 }
 
 func (r *TransactionRepository) UpsertTransactionsByAssetID(transactions []model.Transaction) error {

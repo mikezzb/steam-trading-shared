@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"log"
 	"testing"
 
 	"github.com/mikezzb/steam-trading-shared/database/model"
@@ -186,4 +187,25 @@ func TestDecCompareTo(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetDecimal128(t *testing.T) {
+	t.Run("GetDecimal128", func(t *testing.T) {
+		testVals := []string{
+			"0.0000000000000000000001",
+			"-1",
+			"0.000000000000000000000000534",
+			"0.01",
+			"0.1",
+			"1",
+			"10",
+			"900",
+			"23",
+		}
+
+		for _, val := range testVals {
+			log.Printf("Decimal128: %v", GetDecimal128(val))
+		}
+	})
+
 }

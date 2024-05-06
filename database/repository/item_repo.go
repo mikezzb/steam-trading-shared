@@ -85,18 +85,16 @@ func (r *ItemRepository) GetAll() ([]model.Item, error) {
 	return items, err
 }
 
-func (r *ItemRepository) GetItemsByPage(page, size int, filters map[string]interface{}) ([]model.Item, error) {
+func (r *ItemRepository) GetItemsByPage(page, size int, filters bson.M) ([]model.Item, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	log.Printf("timeout: %v", 1*time.Second)
 	defer cancel()
 
-	filtersBson := MapToBson(filters)
-
 	opts := GetPageOpts(page, size)
 
-	log.Printf("Executing MongoDB Find with filters: %v and opts: %v", filtersBson, opts)
+	log.Printf("Executing MongoDB Find with filters: %v and opts: %v", filters, opts)
 
-	cursor, err := r.ItemCol.Find(ctx, filtersBson, opts)
+	cursor, err := r.ItemCol.Find(ctx, filters, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -106,11 +104,11 @@ func (r *ItemRepository) GetItemsByPage(page, size int, filters map[string]inter
 	return items, err
 }
 
-func (r *ItemRepository) Count() (int64, error) {
+func (r *ItemRepository) Count(filters bson.M) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
 
-	return r.ItemCol.CountDocuments(ctx, bson.M{})
+	return r.ItemCol.CountDocuments(ctx, filters)
 }
 
 func (r *ItemRepository) GetItemByName(name string) (*model.Item, error) {

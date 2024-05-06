@@ -324,3 +324,7 @@ func GetNowHHMMSS() string {
 func SameTime(t1, t2 time.Time) bool {
 	return t1.Unix() == t2.Unix()
 }
+
+func GetTimeBeforeDays(days int) time.Time {
+	return time.Now().AddDate(0, 0, -days)
+}

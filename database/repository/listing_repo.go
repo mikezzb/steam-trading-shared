@@ -25,14 +25,22 @@ func (r *ListingRepository) GetListingByItemName(name string) (*model.Listing, e
 	return &listing, err
 }
 
-func (r *ListingRepository) GetListingsByPage(page int, pageSize int, filters map[string]interface{}) ([]model.Listing, error) {
+func (r *ListingRepository) Count(filters bson.M) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
 
-	filtersBson := MapToBson(filters)
-	opts := options.Find().SetSkip(int64(page * pageSize)).SetLimit(int64(pageSize))
+	return r.ListingCol.CountDocuments(ctx, filters)
+}
 
-	cursor, err := r.ListingCol.Find(ctx, filtersBson, opts)
+func (r *ListingRepository) GetListingsByPage(page int, pageSize int, filters bson.M) ([]model.Listing, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	opts := GetPageOpts(page, pageSize)
+	// sort by price by default, ascending
+	opts.SetSort(bson.M{"price": 1})
+
+	cursor, err := r.ListingCol.Find(ctx, filters, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -41,13 +49,6 @@ func (r *ListingRepository) GetListingsByPage(page int, pageSize int, filters ma
 	var listings []model.Listing
 	err = cursor.All(ctx, &listings)
 	return listings, err
-}
-
-func (r *ListingRepository) Count() (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
-	defer cancel()
-
-	return r.ListingCol.CountDocuments(ctx, bson.M{})
 }
 
 func (r *ListingRepository) FindOneListing(filter bson.M) (*model.Listing, error) {

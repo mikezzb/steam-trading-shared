@@ -527,3 +527,82 @@ func TestSubscriptions(t *testing.T) {
 
 	})
 }
+
+func TestTransactionHistory(t *testing.T) {
+	db, repos, err := RepoInit()
+	defer db.Disconnect()
+	if err != nil {
+		t.Error(err)
+	}
+
+	repo := repos.GetTransactionRepository()
+
+	t.Run("TransactionHistory", func(t *testing.T) {
+		transactions := []model.Transaction{
+			{
+				Name:      "★ Bayonet | Doppler (Factory New)",
+				Price:     shared.GetDecimal128("101"),
+				CreatedAt: time.Now(),
+				Metadata: model.TransactionMetadata{
+					AssetId: "123",
+					Market:  "buff",
+				},
+			},
+			{
+				Name:      "★ Bayonet | Doppler (Factory New)",
+				CreatedAt: time.Now().Add(-time.Hour * (24*6 + 23)),
+				Price:     shared.GetDecimal128("100"),
+				Metadata: model.TransactionMetadata{
+					AssetId: "123",
+					Market:  "buff",
+				},
+			},
+			{
+				Name:      "★ Bayonet | Doppler (Factory New)",
+				CreatedAt: time.Now().Add(-time.Hour * 24 * 8),
+				Price:     shared.GetDecimal128("100"),
+				Metadata: model.TransactionMetadata{
+					AssetId: "123",
+					Market:  "buff",
+				},
+			},
+			{
+				Name:      "★ Flip Knife | Doppler (Factory New)",
+				CreatedAt: time.Now(),
+				Price:     shared.GetDecimal128("100"),
+				Metadata: model.TransactionMetadata{
+					AssetId: "123",
+					Market:  "buff",
+				},
+			},
+		}
+
+		// insert
+		err = repo.InsertTransactions(transactions)
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		// query history
+		history, err := repo.FindItemByDays(7, bson.M{
+			"name": "★ Bayonet | Doppler (Factory New)",
+		})
+		if err != nil {
+			t.Error(err)
+		}
+
+		log.Printf("Transaction history: %v", history)
+
+		if len(history) != 2 {
+			t.Errorf("Expected 2, got %v", len(history))
+		}
+
+		// delete
+		err = repo.DeleteAll()
+		if err != nil {
+			t.Error(err)
+		}
+	})
+
+}
