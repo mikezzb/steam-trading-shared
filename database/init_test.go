@@ -10,7 +10,7 @@ import (
 )
 
 var dbUri = "mongodb://localhost:27017"
-var dbName = "steam-trading"
+var dbName = "steam-trading-unit-test"
 
 func TestTimeConvert(t *testing.T) {
 	dbClient, _ := database.NewDBClient(dbUri, dbName, 10*time.Second)

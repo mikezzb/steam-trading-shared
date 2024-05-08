@@ -520,7 +520,7 @@ func TestSubscriptions(t *testing.T) {
 		}
 
 		// delete the subscription by name
-		err = repo.DeleteSubscriptionByName(subscriptions.Name, subscriptions.OwnerId)
+		err = repo.DeleteAll()
 		if err != nil {
 			t.Error(err)
 		}
