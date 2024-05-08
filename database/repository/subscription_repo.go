@@ -48,6 +48,21 @@ func (r *SubscriptionRepository) UpdateSubscription(subscription *model.Subscrip
 	return err
 }
 
+// find multiple subscriptions by filters
+func (r *SubscriptionRepository) GetSubscriptions(filter bson.M) ([]model.Subscription, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
+	defer cancel()
+
+	cursor, err := r.SubCol.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var subscriptions []model.Subscription
+	err = cursor.All(ctx, &subscriptions)
+	return subscriptions, err
+}
+
 func (r *SubscriptionRepository) GetAllByOwnerId(ownerId primitive.ObjectID) ([]model.Subscription, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
@@ -76,20 +91,11 @@ func (r *SubscriptionRepository) GetAll() ([]model.Subscription, error) {
 	return subscriptions, err
 }
 
-func (r *SubscriptionRepository) DeleteSubscriptionByName(name string, ownerId primitive.ObjectID) error {
+func (r *SubscriptionRepository) DeleteSubscriptionById(id primitive.ObjectID, ownerId primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_DURATION)
 	defer cancel()
 
-	result, err := r.SubCol.DeleteOne(ctx, bson.M{"name": name, "ownerId": ownerId})
-
-	if err != nil {
-		return err
-	}
-
-	if r.ChangeStreamCallback != nil {
-		r.ChangeStreamCallback(result, "delete")
-	}
-
+	_, err := r.SubCol.DeleteOne(ctx, bson.M{"_id": id, "ownerId": ownerId})
 	return err
 }
 
